@@ -1,0 +1,318 @@
+/* ================================================================
+   ETCH — Design System
+   Steel plate & paper · brass accent · engraving aesthetic
+   ================================================================ */
+:root{
+  --ink:#15140F;
+  --plate:#1A1C20;
+  --plate-2:#202329;
+  --paper:#EAE5D9;
+  --bone:#F6F2EA;
+  --brass:#A98449;
+  --brass-soft:#C2A06A;
+  --brass-deep:#7C5E30;
+  --mute:#6F6A5E;
+  --mute-2:#8A857A;
+  --mute-dark:#9A948A;
+  --line:rgba(21,20,15,.14);
+  --line-2:rgba(21,20,15,.08);
+  --line-dark:rgba(194,160,106,.22);
+  --r:4px;
+  --maxw:1240px;
+
+  --font-sans:'Archivo',system-ui,-apple-system,sans-serif;
+  --font-serif:'Fraunces',Georgia,serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --aside-width:420px;
+  --header-height:72px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  background:var(--bone);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  line-height:1.6;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+h1,h2,h3,h4{letter-spacing:-.015em;line-height:1.05;font-weight:700;margin:0}
+p{margin:0 0 1em}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  font-weight:500;color:var(--brass-deep);
+}
+.serif{font-family:var(--font-serif);font-style:italic;font-weight:400}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}
+
+/* ---------- buttons ---------- */
+button{font-family:inherit;cursor:pointer}
+.btn,
+button.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  background:var(--brass);color:#1A140A;border:1px solid var(--brass);
+  font-weight:600;font-size:15px;letter-spacing:.01em;
+  padding:15px 30px;border-radius:var(--r);transition:.2s;
+}
+.btn:hover{background:var(--brass-soft);border-color:var(--brass-soft);transform:translateY(-1px)}
+.btn-ghost{
+  background:transparent;border:1px solid currentColor;color:var(--ink);
+  padding:15px 28px;border-radius:var(--r);font-weight:500;font-size:15px;transition:.2s;
+}
+.btn-ghost:hover{background:var(--ink);color:var(--bone)}
+.btn[disabled],button[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.reset{border:0;background:transparent;padding:0;font-family:inherit;color:inherit}
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+.header{
+  position:sticky;top:0;z-index:40;
+  height:var(--header-height);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;
+  background:rgba(26,28,32,.92);
+  backdrop-filter:saturate(140%) blur(10px);
+  border-bottom:1px solid rgba(194,160,106,.18);
+}
+.header .brand-mark{
+  font-weight:800;font-size:20px;letter-spacing:.4em;color:var(--bone);padding-left:.4em;
+}
+.header .brand-mark .dot{color:var(--brass-soft)}
+.header-menu-desktop{display:flex;gap:34px;align-items:center}
+.header-menu-item{
+  font-size:13px;letter-spacing:.03em;color:rgba(246,242,234,.72);
+  text-transform:capitalize;transition:color .2s;
+}
+.header-menu-item:hover{color:var(--bone)}
+.header-ctas{display:flex;gap:24px;align-items:center}
+.header-ctas a,.header-ctas button{
+  font-size:13px;letter-spacing:.03em;color:rgba(246,242,234,.78);background:transparent;border:0;transition:color .2s;
+}
+.header-ctas a:hover,.header-ctas button:hover{color:var(--bone)}
+.header-ctas a[href="/cart"]{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--bone);
+  border:1px solid rgba(194,160,106,.4);padding:8px 15px;border-radius:var(--r);
+}
+.header-ctas a[href="/cart"]:hover{background:rgba(194,160,106,.12)}
+.header-menu-mobile-toggle{display:none;color:var(--bone)}
+.header-menu-mobile-toggle h3{margin:0;font-size:20px}
+
+/* ================================================================
+   ASIDE (cart / search / menu drawers)
+   ================================================================ */
+.overlay{
+  position:fixed;inset:0;z-index:50;
+  background:rgba(21,20,15,.55);opacity:0;visibility:hidden;transition:opacity .3s;
+}
+.overlay.expanded{opacity:1;visibility:visible}
+aside{
+  position:fixed;top:0;right:calc(-1 * var(--aside-width));z-index:60;
+  height:100dvh;width:var(--aside-width);max-width:90vw;
+  background:var(--bone);box-shadow:-20px 0 60px rgba(0,0,0,.18);
+  transition:right .3s ease;display:flex;flex-direction:column;
+}
+.overlay.expanded aside{right:0}
+aside header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:24px 28px;border-bottom:1px solid var(--line);
+}
+aside header h3{font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:500}
+aside header .close{font-size:24px;text-decoration:none;color:var(--mute);background:transparent;border:0}
+aside main{padding:24px 28px;overflow-y:auto}
+.predictive-search input,
+aside input[type="search"]{
+  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);
+  font-family:inherit;font-size:14px;background:var(--bone);
+}
+
+/* ================================================================
+   HOMEPAGE
+   ================================================================ */
+.home{display:block}
+
+/* hero */
+.etch-hero{
+  position:relative;background:var(--plate);color:var(--bone);overflow:hidden;
+  padding:120px 0 90px;
+}
+.etch-hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 78% 36%,rgba(169,132,73,.12),transparent 60%);
+}
+.etch-hero .wrap{
+  position:relative;z-index:3;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;
+}
+.etch-hero .eyebrow{color:var(--brass-soft);display:flex;align-items:center;gap:14px}
+.etch-hero .eyebrow::before{content:"";width:34px;height:1px;background:var(--brass)}
+.etch-hero h1{
+  font-size:clamp(42px,5.4vw,78px);line-height:.98;letter-spacing:-.022em;margin:24px 0 0;
+}
+.etch-hero h1 .serif{color:var(--brass-soft)}
+.etch-hero .lede{font-size:18px;line-height:1.6;color:rgba(246,242,234,.74);margin:28px 0 0;max-width:440px}
+.etch-hero .cta-row{display:flex;gap:16px;margin-top:38px;flex-wrap:wrap;align-items:center}
+.etch-hero .btn-ghost{color:var(--bone)}
+.etch-hero .trust{display:flex;margin-top:50px;border-top:1px solid var(--line-dark);padding-top:22px;flex-wrap:wrap}
+.etch-hero .trust .item{padding-right:28px;margin-right:28px;border-right:1px solid var(--line-dark)}
+.etch-hero .trust .item:last-child{border:0;margin:0;padding:0}
+.etch-hero .trust .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute-dark)}
+.etch-hero .trust .v{font-size:14px;color:var(--bone);margin-top:5px;font-weight:500}
+.etch-hero .stars{color:var(--brass-soft);letter-spacing:2px;font-size:13px}
+.hero-figure{display:flex;justify-content:center;align-items:center;min-height:420px}
+.hero-figure svg{width:100%;max-width:420px;height:auto;overflow:visible}
+.engrave{fill:none;stroke:var(--brass);stroke-width:1;opacity:.5}
+.engrave.faint{opacity:.24}
+
+/* section shell */
+.etch-section{padding:92px 0}
+.etch-section.paper{background:var(--paper)}
+.etch-section.bone{background:var(--bone)}
+.etch-section.plate{background:var(--plate);color:var(--bone)}
+.sec-head{max-width:640px;margin-bottom:56px}
+.sec-head .eyebrow{color:var(--brass)}
+.etch-section.plate .sec-head .eyebrow{color:var(--brass-soft)}
+.sec-head h2{font-size:clamp(28px,3.4vw,42px);line-height:1.06;margin-top:16px}
+.sec-head h2 .serif{color:var(--brass-deep)}
+.etch-section.plate .sec-head h2 .serif{color:var(--brass-soft)}
+
+/* mechanism strip */
+.mech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.mech-cell{background:var(--paper);padding:38px 32px 42px}
+.mech-cell .n{font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;color:var(--brass-deep);font-weight:500}
+.mech-cell h3{font-size:20px;margin:18px 0 11px}
+.mech-cell p{font-size:14.5px;line-height:1.62;color:var(--mute);margin:0}
+
+/* product showcase */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+.recommended-products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+.product-item{
+  display:block;background:var(--bone);border:1px solid var(--line);border-radius:6px;
+  overflow:hidden;transition:transform .25s,border-color .25s;
+}
+.product-item:hover{transform:translateY(-3px);border-color:var(--brass)}
+.product-item img{aspect-ratio:1/1;object-fit:cover;width:100%;background:var(--plate-2)}
+.product-item h4{font-size:16px;font-weight:600;margin:16px 18px 4px;letter-spacing:-.01em}
+.product-item small{display:block;margin:0 18px 18px;font-family:var(--font-mono);font-size:13px;color:var(--brass-deep)}
+
+/* the method block */
+.method{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.method-card{
+  background:var(--plate-2);border:1px solid var(--line-dark);border-radius:8px;padding:34px;
+}
+.method-card .row{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid rgba(194,160,106,.16)}
+.method-card .row:first-of-type{border-top:0}
+.method-card .row svg{flex-shrink:0;color:var(--brass-soft)}
+.method-card .row span{font-size:14px;color:rgba(246,242,234,.82)}
+
+/* founding band */
+.founding .wrap{display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.founding h2{font-size:clamp(24px,2.8vw,34px);max-width:560px;margin-top:14px;line-height:1.1}
+.founding h2 .serif{color:var(--brass-soft)}
+.founding .eyebrow{color:var(--brass-soft)}
+.founding-meta{display:flex;flex-direction:column;gap:16px;min-width:260px}
+.meter{height:6px;background:rgba(194,160,106,.2);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;width:68%;background:var(--brass);border-radius:3px}
+.meter-label{font-family:var(--font-mono);font-size:12px;letter-spacing:.05em;color:var(--mute-dark);display:flex;justify-content:space-between}
+.guarantee{font-size:13px;color:rgba(246,242,234,.6);display:flex;align-items:center;gap:9px}
+
+/* ================================================================
+   PRODUCT PAGE
+   ================================================================ */
+.product{
+  max-width:var(--maxw);margin:0 auto;padding:60px 40px;
+  display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;
+}
+.product-image,.product img{width:100%;border-radius:8px;background:var(--plate-2)}
+.product-image img{aspect-ratio:1/1;object-fit:cover;border-radius:8px}
+.product-main{position:sticky;top:calc(var(--header-height) + 24px)}
+.product-main h1{font-size:clamp(30px,3.4vw,44px);letter-spacing:-.02em}
+.product-price{font-family:var(--font-mono);font-size:22px;color:var(--brass-deep);margin-top:10px}
+.product-price s{color:var(--mute-2);margin-right:8px}
+.product-options{margin:8px 0 4px}
+.product-options-grid{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 4px}
+.product-options-item,
+.product-options-item button{
+  border:1px solid var(--line);background:var(--bone);border-radius:var(--r);
+  padding:10px 16px;font-size:14px;transition:.2s;
+}
+.product-options-item:hover{border-color:var(--brass)}
+.product-form button{width:100%}
+.product-main h4{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0}
+
+/* order bump on PDP */
+.order-bump{
+  border:1px dashed var(--brass);background:rgba(169,132,73,.08);
+  border-radius:6px;padding:18px 20px;margin:20px 0;display:flex;gap:14px;align-items:flex-start;
+}
+.order-bump .check{
+  width:22px;height:22px;border-radius:5px;border:1.5px solid var(--brass);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;color:var(--brass);
+}
+.order-bump.on .check{background:var(--brass);color:#1A140A}
+.order-bump .nm{font-weight:600;font-size:14px}
+.order-bump .nm b{color:var(--brass-deep)}
+.order-bump .ds{font-size:12.5px;color:var(--mute);margin-top:2px}
+.order-bump .pr{margin-left:auto;text-align:right;white-space:nowrap}
+.order-bump .pr .add{font-weight:700;font-size:15px;color:var(--brass-deep)}
+.order-bump .pr .was{font-family:var(--font-mono);font-size:11.5px;color:var(--mute)}
+
+/* ================================================================
+   CART
+   ================================================================ */
+.cart-main{display:flex;flex-direction:column;height:100%}
+.cart-line{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.cart-line img{width:64px;height:64px;border-radius:var(--r);object-fit:cover}
+.cart-summary-aside{border-top:1px solid var(--line);padding-top:18px;margin-top:auto}
+.cart-summary-page dl,.cart-summary-aside dl{display:flex;justify-content:space-between;font-size:14px}
+.cart-subtotal{font-weight:600}
+a.checkout-button,.cart-summary-aside a{
+  display:block;text-align:center;background:var(--ink);color:var(--bone);
+  padding:14px;border-radius:var(--r);font-weight:600;margin-top:14px;
+}
+
+/* ================================================================
+   FOOTER
+   ================================================================ */
+.footer{background:var(--ink);color:var(--bone);padding:64px 0 40px;margin-top:0}
+.footer-inner{max-width:var(--maxw);margin:0 auto;padding:0 40px}
+.footer-top{display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap}
+.footer .brand-mark{font-weight:800;font-size:18px;letter-spacing:.4em;padding-left:.4em}
+.footer .brand-mark .dot{color:var(--brass-soft)}
+.footer-tag{font-family:var(--font-serif);font-style:italic;font-size:15px;color:var(--mute-dark);margin-top:12px}
+.footer-cols{display:flex;gap:60px;flex-wrap:wrap}
+.footer-col h5{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute-dark);margin:0 0 16px;font-weight:500}
+.footer-col a,.footer-menu a{display:block;font-size:14px;color:rgba(246,242,234,.66);margin-bottom:11px;transition:color .2s}
+.footer-col a:hover,.footer-menu a:hover{color:var(--bone)}
+.footer-menu{display:flex;flex-direction:column}
+.footer-legal{border-top:1px solid rgba(255,255,255,.08);margin-top:46px;padding-top:24px;font-size:11.5px;color:var(--mute-dark);line-height:1.6;max-width:780px}
+
+/* ================================================================
+   MISC
+   ================================================================ */
+.mock-shop-notice{background:var(--brass-deep);color:var(--bone);text-align:center;padding:8px;font-size:12px;font-family:var(--font-mono);letter-spacing:.04em}
+.route-error{max-width:680px;margin:80px auto;padding:0 40px;text-align:center}
+.featured-collection{display:block}
+
+@media (max-width:900px){
+  .wrap{padding:0 22px}
+  .header{padding:0 22px}
+  .etch-hero .wrap,.method,.founding .wrap{grid-template-columns:1fr;gap:14px}
+  .hero-figure{order:-1;min-height:280px}
+  .mech-grid{grid-template-columns:1fr}
+  .product{grid-template-columns:1fr;gap:28px;padding:32px 22px}
+  .product-main{position:static}
+  .header-menu-desktop{display:none}
+  .header-menu-mobile-toggle{display:block}
+  .footer-inner{padding:0 22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
