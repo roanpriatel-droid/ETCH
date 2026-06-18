@@ -57,13 +57,13 @@ export const METHOD_OPTIONS: MethodOption[] = [
   {
     name: 'Standalone',
     price: '$39',
-    blurb: 'The full 30-page protocol on its own — for owners who already have a device, or anyone who wants the system before committing.',
+    blurb: 'The full 30-page protocol on its own — for readers who don’t own a device yet, or who want the system before committing. Choose the variant matched to the device you’ll run.',
     bullets: [
       'PDF + web reader',
       'Lifetime updates',
-      'Covers Core and Form variants',
+      'Core (abdominal) or Form (glute) variant',
     ],
-    cta: {label: 'Get the Method', to: '/products/the-etch-method'},
+    cta: {label: 'Get Method: Core', to: '/products/the-etch-method-core'},
   },
   {
     name: 'Coached',

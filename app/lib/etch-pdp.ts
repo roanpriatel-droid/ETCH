@@ -2,8 +2,13 @@ export type PdpBenefit = {title: string; text: string};
 export type PdpStep = {step: string; title: string; text: string};
 export type PdpSpec = {label: string; value: string};
 export type PdpFaq = {q: string; a: string};
+export type PdpModule = {n: string; title: string; text: string};
+
+export type PdpKind = 'device' | 'digital';
 
 export type PdpContent = {
+  /** What kind of product this is — drives the PDP layout */
+  kind: PdpKind;
   /** Display name (large heading on PDP) */
   name: string;
   /** Mono eyebrow line above the name (release / edition) */
@@ -20,14 +25,18 @@ export type PdpContent = {
   shortDesc: string;
   /** Four benefit cards */
   benefits: [PdpBenefit, PdpBenefit, PdpBenefit, PdpBenefit];
-  /** What's in the box list */
+  /** What's in the box list (devices) — empty for digital */
   whatsInBox: string[];
   /** Three-step how-it-works */
   howItWorks: [PdpStep, PdpStep, PdpStep];
-  /** Device specs — omit for consumables */
+  /** Device specs OR digital format block — omitted for consumables */
   specs?: PdpSpec[];
   /** Pad-care list — only on flux-pads */
   padCare?: string[];
+  /** Digital only — the 8 modules of the protocol */
+  modules?: PdpModule[];
+  /** Digital only — the device this guide is matched to */
+  matchedDevice?: {handle: string; name: string};
   /** FAQ for this product */
   faq: PdpFaq[];
   /** One-line guarantee summary */
@@ -60,6 +69,7 @@ const SHARED_GUARANTEE = '60-night money-back · 2-year warranty · free shippin
    FLUX CORE
    ================================================================ */
 const CORE: PdpContent = {
+  kind: 'device',
   name: 'ETCH Flux™ — Core',
   edition: 'Founding release · No. 001',
   price: '$199',
@@ -141,6 +151,7 @@ const CORE: PdpContent = {
    FLUX FORM
    ================================================================ */
 const FORM: PdpContent = {
+  kind: 'device',
   name: 'ETCH Flux™ — Form',
   edition: 'Founding release · No. 001',
   price: '$199',
@@ -222,6 +233,7 @@ const FORM: PdpContent = {
    THE ETCH SET (Core + Form)
    ================================================================ */
 const SET: PdpContent = {
+  kind: 'device',
   name: 'The ETCH Set',
   edition: 'Best value · save $49',
   price: '$349',
@@ -306,6 +318,7 @@ const SET: PdpContent = {
    FLUX PADS (consumable)
    ================================================================ */
 const PADS: PdpContent = {
+  kind: 'device',
   name: 'Flux™ Replacement Pads',
   edition: 'Consumable · fits Core and Form',
   price: '$32 single · $24/mo subscription',
@@ -384,6 +397,190 @@ const PADS: PdpContent = {
 };
 
 /* ================================================================
+   THE 8 MODULES — shared between Method: Core and Method: Form
+   (the schedule and placement work change per variant; the structure
+   of the protocol is the same)
+   ================================================================ */
+const METHOD_MODULES: PdpModule[] = [
+  {n: '01', title: 'Calibration', text: 'Find your working intensity on day one and re-calibrate every two weeks. The honest dial, not guesswork.'},
+  {n: '02', title: 'The 8-week schedule', text: 'Every session — what mode, what intensity, how long — across the protocol, matched to your device.'},
+  {n: '03', title: 'Train so it shows', text: 'The lifts and accessories per week that build the structure the activation reveals.'},
+  {n: '04', title: 'Fuel', text: 'Plate templates, protein targets, carb timing around training. No calorie counting, no fads.'},
+  {n: '05', title: 'Recovery cycling', text: 'Sleep, walks, light EMS on the off days. What earns its place, and what doesn’t.'},
+  {n: '06', title: 'The tracker', text: 'A simple weekly check-in — adherence, sleep, energy, contraction quality. Five fields.'},
+  {n: '07', title: 'Troubleshooting', text: 'Pad lifting, intensity plateaus, soreness, scheduling around travel — solved.'},
+  {n: '08', title: 'Maintenance', text: 'Beyond week eight: a sustainable cadence that holds the work without needing eight weeks again.'},
+];
+
+/* ================================================================
+   Format / access block — used in the spec slot for digital products
+   ================================================================ */
+const DIGITAL_FORMAT: PdpSpec[] = [
+  {label: 'Length', value: '30 pages'},
+  {label: 'Format', value: 'PDF + web reader'},
+  {label: 'Access', value: 'Instant — delivered on purchase'},
+  {label: 'Updates', value: 'Lifetime — every revision lands in your account'},
+  {label: 'Compatibility', value: 'Reads on any phone, tablet, or laptop'},
+  {label: 'Refund policy', value: 'Digital, non-refundable once delivered'},
+];
+
+const DIGITAL_GUARANTEE = 'Instant download · lifetime updates · free with the matched device';
+
+/* ================================================================
+   METHOD: CORE — digital protocol matched to Flux Core
+   ================================================================ */
+const METHOD_CORE: PdpContent = {
+  kind: 'digital',
+  name: 'The ETCH Method: Core',
+  edition: 'Standalone — included free with the device',
+  price: '$39',
+  compareNote: null,
+  target: 'Digital protocol · abdominal',
+  tagline: 'The 8-week protocol that turns activation into a visibly defined core.',
+  shortDesc:
+    'The full 30-page protocol matched to Flux Core — exact sessions, training, fuel and recovery across eight weeks. Free with every Flux Core; $39 on its own.',
+  benefits: [
+    {
+      title: 'Matched to the abdominal protocol',
+      text: 'Calibrated to the rectus abdominis and obliques — every session pairs with the placement and intensity the device runs.',
+    },
+    {
+      title: 'Instant access',
+      text: 'PDF plus a web reader, delivered the moment you buy. Read it on any device, mark it up, run it tomorrow.',
+    },
+    {
+      title: 'Lifetime updates',
+      text: 'Every revision — including new placement maps, new accessory work, refined fuel templates — lands in your account.',
+    },
+    {
+      title: 'The work, not just sessions',
+      text: 'The training, fuel and recovery that turn activation into something visible — not a session schedule with nothing around it.',
+    },
+  ],
+  whatsInBox: [],
+  howItWorks: [
+    {
+      step: '01',
+      title: 'Buy it',
+      text: 'Instant download on purchase — PDF + web reader available the moment payment clears.',
+    },
+    {
+      step: '02',
+      title: 'Read it',
+      text: 'Eight short modules. Designed to read in a single sitting, so you start week one knowing exactly what to run.',
+    },
+    {
+      step: '03',
+      title: 'Run it',
+      text: 'Eight weeks of exact sessions, intensity ramps, training and fuel. Start tomorrow — the calibration is in module one.',
+    },
+  ],
+  specs: DIGITAL_FORMAT,
+  modules: METHOD_MODULES,
+  matchedDevice: {handle: 'etch-flux-core', name: 'ETCH Flux™ — Core'},
+  faq: [
+    {
+      q: 'Isn’t this free with the device?',
+      a: 'Yes — every Flux Core ships with Method: Core, included free. Buy it standalone if you don’t own the device yet, or want to read the protocol before deciding.',
+    },
+    {
+      q: 'What does the Method actually tell me?',
+      a: 'Every session in the 8-week schedule: which mode to run on the device, what intensity to climb to, how long, and which lifts and meals to pair it with. No guesswork.',
+    },
+    {
+      q: 'How is this different from Method: Form?',
+      a: 'Method: Core is the abdominal protocol — matched to Flux Core. Method: Form is the glute protocol — matched to Flux Form. Method: Complete (free with The Set) bundles both.',
+    },
+    {
+      q: 'Can I upgrade to a personalised plan?',
+      a: 'Yes. Coached is $199 — a personalized 8-week plan built from a short intake, with two coached check-ins. Apply via the contact page.',
+    },
+    {
+      q: 'What if I want a refund?',
+      a: 'Digital products are non-refundable once delivered. If something is wrong with the file or your access, contact support — we’ll fix it.',
+    },
+  ],
+  guarantee: DIGITAL_GUARANTEE,
+};
+
+/* ================================================================
+   METHOD: FORM — digital protocol matched to Flux Form
+   ================================================================ */
+const METHOD_FORM: PdpContent = {
+  kind: 'digital',
+  name: 'The ETCH Method: Form',
+  edition: 'Standalone — included free with the device',
+  price: '$39',
+  compareNote: null,
+  target: 'Digital protocol · glute',
+  tagline: 'The 8-week protocol that turns activation into visible glute shape.',
+  shortDesc:
+    'The full 30-page protocol matched to Flux Form — exact sessions, training, fuel and recovery across eight weeks. Free with every Flux Form; $39 on its own.',
+  benefits: [
+    {
+      title: 'Matched to the glute protocol',
+      text: 'Calibrated to the maximus and medius — every session pairs with the placement and intensity the device runs.',
+    },
+    {
+      title: 'Instant access',
+      text: 'PDF plus a web reader, delivered the moment you buy. Read it on any device, mark it up, run it tomorrow.',
+    },
+    {
+      title: 'Lifetime updates',
+      text: 'Every revision — including new placement maps, new accessory work, refined fuel templates — lands in your account.',
+    },
+    {
+      title: 'Built around real training',
+      text: 'Hip thrusts, hinges and accessories on the same schedule as the device — load and stimulation amplifying each other.',
+    },
+  ],
+  whatsInBox: [],
+  howItWorks: [
+    {
+      step: '01',
+      title: 'Buy it',
+      text: 'Instant download on purchase — PDF + web reader available the moment payment clears.',
+    },
+    {
+      step: '02',
+      title: 'Read it',
+      text: 'Eight short modules. Designed to read in a single sitting, so you start week one knowing exactly what to run.',
+    },
+    {
+      step: '03',
+      title: 'Run it',
+      text: 'Eight weeks of exact sessions, loaded training and fuel templates. Start tomorrow — the calibration is in module one.',
+    },
+  ],
+  specs: DIGITAL_FORMAT,
+  modules: METHOD_MODULES,
+  matchedDevice: {handle: 'etch-flux-form', name: 'ETCH Flux™ — Form'},
+  faq: [
+    {
+      q: 'Isn’t this free with the device?',
+      a: 'Yes — every Flux Form ships with Method: Form, included free. Buy it standalone if you don’t own the device yet, or want to read the protocol first.',
+    },
+    {
+      q: 'What does the Method actually tell me?',
+      a: 'Every session in the 8-week schedule: which mode to run on the device, what intensity to climb to, how long, and which lifts and meals to pair it with. No guesswork.',
+    },
+    {
+      q: 'How is this different from Method: Core?',
+      a: 'Method: Form is the glute protocol — matched to Flux Form. Method: Core is the abdominal protocol — matched to Flux Core. Method: Complete (free with The Set) bundles both.',
+    },
+    {
+      q: 'Can I upgrade to a personalised plan?',
+      a: 'Yes. Coached is $199 — a personalized 8-week plan built from a short intake, with two coached check-ins. Apply via the contact page.',
+    },
+    {
+      q: 'What if I want a refund?',
+      a: 'Digital products are non-refundable once delivered. If something is wrong with the file or your access, contact support — we’ll fix it.',
+    },
+  ],
+  guarantee: DIGITAL_GUARANTEE,
+};
+
+/* ================================================================
    REGISTRY + helper
    ================================================================ */
 export const PDP_CONTENT: Record<string, PdpContent> = {
@@ -391,6 +588,8 @@ export const PDP_CONTENT: Record<string, PdpContent> = {
   'etch-flux-form': FORM,
   'the-etch-set': SET,
   'flux-pads': PADS,
+  'the-etch-method-core': METHOD_CORE,
+  'the-etch-method-form': METHOD_FORM,
   default: CORE,
 };
 

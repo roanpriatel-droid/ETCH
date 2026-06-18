@@ -2426,3 +2426,488 @@ a.checkout-button:hover,
 @media (max-width:900px){
   .articles-grid{grid-template-columns:1fr;gap:18px}
 }
+
+/* ================================================================
+   GRADED IMAGE — the ETCH Complexion
+   ================================================================ */
+.graded-frame{
+  position:relative;
+  display:block;
+  overflow:hidden;
+  border-radius:inherit;
+  isolation:isolate;
+  --graded-tint:.6;
+}
+.graded-frame > img,
+.graded-frame > picture,
+.graded-frame > .shopify-image,
+.graded-frame > .shopify-image > img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter: saturate(.85) contrast(1.08) brightness(.92);
+}
+.graded-frame > svg{
+  display:block;width:100%;height:100%;
+}
+.graded-frame .graded-tint{
+  position:absolute;inset:0;
+  pointer-events:none;
+  mix-blend-mode:soft-light;
+  background:linear-gradient(155deg, rgba(184,137,63,.18), rgba(122,46,34,.14));
+  opacity:var(--graded-tint);
+  z-index:2;
+}
+.graded-frame .graded-vignette{
+  position:absolute;inset:0;
+  pointer-events:none;
+  background: radial-gradient(ellipse at 50% 40%, transparent 58%, rgba(20,16,9,.55));
+  opacity: calc(var(--graded-tint) * 1.0);
+  z-index:3;
+}
+.graded-frame.has-frame{
+  border:1px solid var(--brass-deep);
+  border-radius:10px;
+  box-shadow:
+    inset 0 1px 0 rgba(220,179,106,.16),
+    inset 0 -1px 0 rgba(20,16,9,.4),
+    0 0 50px rgba(184,137,63,.16);
+}
+
+/* When GradedImage wraps a Shopify <Image>, Hydrogen sometimes emits a
+   wrapping div w/ background-color; flatten it so the grade lands on the img. */
+.graded-frame [data-loaded="false"]{background:transparent}
+
+/* ================================================================
+   GRAIN — fixed viewport overlay
+   ================================================================ */
+.grain{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:5;
+  opacity:.045;
+  mix-blend-mode:overlay;
+  /* keep the grain element offscreen for compositing */
+}
+.grain svg{width:100%;height:100%;display:block}
+@media (prefers-reduced-motion: reduce){
+  .grain{opacity:.03}
+}
+
+/* ================================================================
+   MARQUEE — featured-in row
+   ================================================================ */
+.marquee{
+  position:relative;
+  overflow:hidden;
+  width:100%;
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee-track{
+  display:flex;
+  gap:0;
+  width:max-content;
+  animation: marquee-slide var(--marquee-duration, 38s) linear infinite;
+}
+.marquee:hover .marquee-track{animation-play-state:paused}
+.marquee-row{
+  display:flex;
+  gap:64px;
+  padding:0 32px;
+  align-items:center;
+}
+@keyframes marquee-slide{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+@media (prefers-reduced-motion: reduce){
+  .marquee-track{animation:none;transform:none}
+  .marquee{mask-image:none;-webkit-mask-image:none}
+  .marquee-row:last-child{display:none}
+}
+
+/* ================================================================
+   STICKY BUY BAR (PDP)
+   ================================================================ */
+.sticky-buy-bar{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:42;
+  background:rgba(20,16,9,.94);
+  backdrop-filter:saturate(140%) blur(14px);
+  -webkit-backdrop-filter:saturate(140%) blur(14px);
+  border-bottom:1px solid var(--line-d);
+  color:var(--ivory);
+  transform:translateY(-100%);
+  opacity:0;
+  pointer-events:none;
+  transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .25s;
+}
+.sticky-buy-bar.is-visible{
+  transform:translateY(0);
+  opacity:1;
+  pointer-events:auto;
+}
+.sticky-buy-inner{
+  max-width:var(--maxw);margin:0 auto;
+  padding:12px 40px;
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+}
+.sticky-buy-info{display:flex;align-items:baseline;gap:18px;min-width:0;flex:1}
+.sbb-name{
+  font-size:14px;font-weight:600;letter-spacing:-.012em;
+  color:var(--ivory);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sbb-price{
+  font-family:var(--font-mono);
+  font-size:14px;color:var(--brass-light);font-weight:500;letter-spacing:-.005em;
+  white-space:nowrap;
+}
+.sticky-buy-cta .btn,
+.sticky-buy-cta button.btn{padding:11px 22px;font-size:13.5px}
+@media (max-width:700px){
+  .sticky-buy-inner{padding:10px 22px;gap:12px}
+  .sbb-price{display:none}
+}
+
+/* ================================================================
+   FOCUS RINGS — brass, visible
+   ================================================================ */
+:where(a, button, [role="button"], input, select, textarea, summary, details):focus-visible{
+  outline:2px solid var(--brass-light);
+  outline-offset:3px;
+  border-radius:3px;
+}
+.btn:focus-visible,
+button.btn:focus-visible,
+a.btn:focus-visible{outline-offset:4px}
+
+/* ================================================================
+   DROP CAPS — long-form lead paragraphs
+   ================================================================ */
+.lede-dropcap::first-letter,
+.has-dropcap > p:first-child::first-letter{
+  font-family:var(--font-serif);
+  font-style:italic;
+  font-weight:400;
+  float:left;
+  font-size: 4.6em;
+  line-height: .88;
+  padding: 8px 12px 0 0;
+  color:var(--brass-deep);
+}
+.etch-section.plate .lede-dropcap::first-letter,
+.etch-section.dark .lede-dropcap::first-letter,
+.etch-section.plate .has-dropcap > p:first-child::first-letter,
+.etch-section.dark .has-dropcap > p:first-child::first-letter{
+  color:var(--brass-light);
+}
+
+/* ================================================================
+   PAGE-ENTER fade
+   ================================================================ */
+main{
+  animation: page-enter .35s ease-out both;
+}
+@keyframes page-enter{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+@media (prefers-reduced-motion: reduce){
+  main{animation:none}
+}
+
+/* ================================================================
+   MAGNETIC GLOW (refined CTA bloom)
+   The existing .btn already has the brass-grad + glow. This adds a
+   subtle pulse-on-hover via radial overlay — transform/opacity only.
+   ================================================================ */
+.btn{position:relative;isolation:isolate;overflow:hidden}
+.btn::after{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 0%, rgba(255,235,180,.22), transparent 55%);
+  opacity:0;
+  transition:opacity .25s;
+  pointer-events:none;
+  z-index:1;
+}
+.btn:hover::after{opacity:1}
+.btn > *{position:relative;z-index:2}
+
+/* ================================================================
+   PULL QUOTES (long-form Science page)
+   ================================================================ */
+.pull-quote{
+  margin:48px auto;
+  max-width:760px;
+  padding:24px 0;
+  border-top:1px solid var(--line-d);
+  border-bottom:1px solid var(--line-d);
+  font-family:var(--font-serif);
+  font-style:italic;
+  font-size:clamp(20px,2.2vw,28px);
+  line-height:1.4;
+  letter-spacing:-.005em;
+  color:var(--brass-deep);
+  text-align:center;
+}
+.etch-section.plate .pull-quote,
+.etch-section.dark .pull-quote{color:var(--brass-light);border-color:var(--line-d)}
+
+/* ================================================================
+   STICKY SECTION NAV (Science page)
+   ================================================================ */
+.section-nav{
+  position:sticky;
+  top:calc(var(--header-height) + 32px);
+  display:flex;flex-direction:column;gap:4px;
+  border-left:1px solid var(--line);
+  padding-left:18px;
+}
+.section-nav a{
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--mute);
+  padding:7px 0;
+  transition:color .2s,padding-left .2s;
+  position:relative;
+}
+.section-nav a:hover{color:var(--brass-deep)}
+.section-nav a::before{
+  content:"";
+  position:absolute;left:-19px;top:50%;
+  width:1px;height:0;
+  background:var(--brass);
+  transform:translateY(-50%);
+  transition:height .25s;
+}
+.section-nav a.is-active{
+  color:var(--ink);
+  padding-left:8px;
+}
+.section-nav a.is-active::before{height:18px}
+
+/* ================================================================
+   SCIENCE LAYOUT — sticky nav + long-form body
+   ================================================================ */
+.science-layout{
+  display:grid;
+  grid-template-columns:200px 1fr;
+  gap:64px;
+  align-items:start;
+}
+.science-body{max-width:760px}
+.science-body section{
+  margin-bottom:80px;
+  scroll-margin-top:calc(var(--header-height) + 32px);
+}
+.science-body section:last-child{margin-bottom:0}
+.science-body h2{
+  font-size:clamp(28px,3.2vw,44px);
+  line-height:1.06;letter-spacing:-.018em;
+  margin-bottom:24px;
+}
+.science-body h2 .serif{color:var(--brass-deep);font-style:italic}
+.science-body h3{
+  font-size:20px;letter-spacing:-.012em;
+  margin:32px 0 12px;
+}
+.science-body p{
+  font-size:17px;line-height:1.72;color:var(--ink);
+  margin:0 0 18px;
+  max-width:68ch;
+}
+.science-body p.mute{color:var(--mute)}
+.science-body strong{font-weight:600}
+.science-body ul,.science-body ol{
+  padding-left:1.4em;margin:0 0 22px;
+  font-size:16px;line-height:1.7;color:var(--ink);
+}
+.science-body li{margin-bottom:8px;max-width:64ch}
+.science-body .lede-dropcap{font-size:18px;line-height:1.72}
+
+/* glossary */
+.glossary{
+  display:grid;grid-template-columns:1fr;gap:0;
+  border-top:1px solid var(--line);
+}
+.glossary dt{
+  font-family:var(--font-mono);
+  font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--brass-deep);font-weight:500;
+  padding:18px 0 6px;
+  border-top:1px solid var(--line);
+}
+.glossary dt:first-of-type{border-top:0;padding-top:8px}
+.glossary dd{
+  margin:0 0 18px;
+  font-size:15px;line-height:1.62;color:var(--mute);
+  max-width:62ch;
+}
+
+/* diagram art (engraving-style) */
+.sci-diagram{
+  width:100%;
+  margin:28px 0 36px;
+  padding:36px 32px;
+  background:var(--parchment);
+  border:1px solid var(--line);
+  border-radius:10px;
+}
+.sci-diagram svg{width:100%;height:auto;display:block;max-width:560px;margin:0 auto}
+.sci-diagram-caption{
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--brass-deep);font-weight:500;
+  text-align:center;margin-top:18px;
+}
+
+@media (max-width:900px){
+  .science-layout{grid-template-columns:1fr;gap:24px}
+  .section-nav{position:static;border-left:0;border-top:1px solid var(--line);padding:18px 0 0}
+  .section-nav{flex-direction:row;flex-wrap:wrap;gap:14px}
+  .science-body p,.science-body li,.glossary dd{max-width:none}
+}
+
+/* ================================================================
+   404 — designed error route
+   ================================================================ */
+.not-found{
+  background-color:#0D0A06;
+  background-image: var(--ember-bg);
+  color:var(--ivory);
+  min-height: calc(100svh - var(--header-height));
+  display:flex;align-items:center;justify-content:center;
+  padding: clamp(60px,10vh,120px) 40px;
+}
+.not-found .wrap{
+  max-width:720px;
+  text-align:center;
+  position:relative;
+}
+.not-found .nf-engrave{
+  width:200px;height:auto;
+  margin:0 auto 32px;
+  opacity:.45;
+}
+.not-found h1{
+  font-size:clamp(48px,8vw,120px);
+  letter-spacing:-.03em;line-height:.95;
+  margin:0;
+}
+.not-found h1 .serif{color:var(--brass-light)}
+.not-found .lede{
+  color:rgba(246,241,231,.74);
+  max-width:520px;margin:24px auto 0;
+}
+.not-found .cta-row{
+  display:flex;gap:16px;justify-content:center;margin-top:36px;flex-wrap:wrap;
+}
+
+/* ================================================================
+   EMAIL FORM POLISH (focus + success ring)
+   ================================================================ */
+.email-form input[type="email"]:focus-visible{
+  outline:none;
+  border-color:var(--brass-light);
+  box-shadow: 0 0 0 3px rgba(184,137,63,.18);
+}
+.email-form.is-success{
+  border-color:var(--brass);
+  box-shadow: 0 0 0 1px var(--brass-light) inset, 0 0 40px rgba(184,137,63,.18);
+}
+.email-form .success-msg{
+  display:none;
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--brass-light);
+  margin-top:6px;
+}
+.email-form.is-success .success-msg{display:block}
+.email-form.is-success .row{opacity:.55}
+
+/* ================================================================
+   CART DRAWER POLISH
+   ================================================================ */
+.cart-line img,
+.cart-line .cart-thumb img{
+  filter: saturate(.88) contrast(1.06);
+}
+.cart-guarantee{
+  margin-top:14px;
+  font-size:12.5px;color:var(--mute);
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  background:rgba(184,137,63,.06);
+  border:1px solid var(--line);
+  border-radius:6px;
+}
+.cart-guarantee svg{color:var(--brass);flex-shrink:0}
+.cart-shipping-line{
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--brass-deep);
+  text-align:center;
+  margin-top:8px;
+}
+
+/* ================================================================
+   PDP FRAME — graded-frame sizing for SVG placeholders
+   When a GradedImage wraps an SVG (DeviceOutline / ProtocolMockup),
+   we want the .graded-frame to size to the SVG's max-width so the tint
+   and vignette layers sit *on the SVG*, not on the whole .pdp-frame.
+   ================================================================ */
+.pdp-frame > .graded-frame{
+  width:max-content;
+  max-width:80%;
+  height:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.pdp-frame > .graded-frame > svg,
+.pdp-frame > .graded-frame > span > svg{
+  width:auto;
+  height:auto;
+  max-width:100%;
+}
+.pdp-frame .protocol-mockup{max-width:240px;height:auto}
+.pdp-frame .device-outline{max-width:240px;height:auto}
+
+/* matched-device callout on digital PDPs */
+.matched-grid{
+  display:grid;grid-template-columns:1.1fr .9fr;
+  gap:56px;align-items:center;
+}
+.matched-art{
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:var(--char-2);
+  border:1px solid var(--line-d);
+  border-radius:12px;
+  box-shadow:
+    inset 0 1px 0 rgba(220,179,106,.1),
+    inset 0 50px 80px -40px rgba(220,179,106,.14),
+    0 24px 60px -30px rgba(184,137,63,.22);
+  min-height:280px;
+}
+.matched-art .graded-frame{width:max-content;max-width:60%}
+.matched-art .device-outline{max-width:200px;height:auto}
+
+@media (max-width:900px){
+  .matched-grid{grid-template-columns:1fr;gap:28px}
+  .matched-art{min-height:240px}
+}
+
+/* digital options-grid "you're viewing this tier" badge styling */
+.option-card .opt-cta[aria-disabled="true"]{
+  cursor:default;
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--brass-deep);
+}

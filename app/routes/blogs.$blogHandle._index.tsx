@@ -1,9 +1,10 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/blogs.$blogHandle._index';
-import {Image, getPaginationVariables} from '@shopify/hydrogen';
+import {getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {PageHero} from '~/components/PageHero';
+import {GradedImage} from '~/components/GradedImage';
 
 export const meta: Route.MetaFunction = ({data}) => [
   {title: `${data?.blogTitle ?? 'Journal'} — ETCH`},
@@ -115,12 +116,11 @@ function ArticleCard({
     >
       <div className="article-image">
         {article.image ? (
-          <Image
+          <GradedImage
             alt={article.image.altText || article.title}
-            aspectRatio="3/2"
             data={article.image}
-            loading={index < 2 ? 'eager' : 'lazy'}
-            sizes="(min-width: 768px) 50vw, 100vw"
+            aspectRatio="3/2"
+            priority={index < 2}
           />
         ) : (
           <div className="article-image-fallback" aria-hidden="true" />

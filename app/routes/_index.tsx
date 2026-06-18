@@ -47,9 +47,9 @@ function Hero() {
             <span className="serif">engineered.</span>
           </h1>
           <p className="lede">
-            Twenty-minute sessions of deep electrical muscle activation — firing
-            the fibres ordinary training leaves dormant. Build a stronger, more
-            defined body on your schedule.
+            Twenty minutes of deep EMS — recruiting the fibres voluntary effort
+            leaves dormant. The 8-week protocol that turns activation into a
+            visibly defined result.
           </p>
           <div className="cta-row">
             <Link className="btn" to={THE_SET.url}>

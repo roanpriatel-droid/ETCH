@@ -1,4 +1,5 @@
-import {useLoaderData} from 'react-router';
+import {useRef} from 'react';
+import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
@@ -12,11 +13,13 @@ import type {ProductFragment} from 'storefrontapi.generated';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {getPdpContent, type PdpContent} from '~/lib/etch-pdp';
 import {PdpGallery} from '~/components/pdp/PdpGallery';
+import {DigitalGallery} from '~/components/pdp/DigitalGallery';
 import {
   PdpRealBuyBox,
   PdpPlaceholderBuyBox,
 } from '~/components/pdp/PdpBuyBox';
 import {PdpSections} from '~/components/pdp/PdpSections';
+import {StickyBuyBar} from '~/components/StickyBuyBar';
 
 export const meta: Route.MetaFunction = ({data}) => {
   const name = data?.content?.name ?? 'ETCH';
@@ -84,20 +87,51 @@ export default function Product() {
   const {handle, product, content} = useLoaderData<typeof loader>();
   // content is guaranteed when we reach this component (else 404 above)
   const resolved = (content ?? null) as PdpContent | null;
+  const buyBoxRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
+      {resolved ? (
+        <StickyBuyBar
+          name={resolved.name}
+          price={resolved.price}
+          triggerRef={buyBoxRef}
+          url={`/products/${handle}`}
+        >
+          <Link className="btn" to={`/products/${handle}`}>
+            {resolved.isPads ? 'Choose pads' : 'Add to kit'}
+          </Link>
+        </StickyBuyBar>
+      ) : null}
+
       <section className="pdp-top">
-        <PdpGallery
-          image={product?.selectedOrFirstAvailableVariant?.image ?? null}
-          isSet={resolved?.isSet}
-          isPads={resolved?.isPads}
-        />
-        {product ? (
-          <PdpRealBuy product={product} content={resolved!} />
+        {resolved?.kind === 'digital' ? (
+          <DigitalGallery
+            image={product?.selectedOrFirstAvailableVariant?.image ?? null}
+            productName={resolved.name}
+            label={
+              resolved.matchedDevice?.handle === 'etch-flux-core'
+                ? 'CORE'
+                : resolved.matchedDevice?.handle === 'etch-flux-form'
+                  ? 'FORM'
+                  : 'THE METHOD'
+            }
+          />
         ) : (
-          <PdpPlaceholderBuyBox content={resolved!} />
+          <PdpGallery
+            image={product?.selectedOrFirstAvailableVariant?.image ?? null}
+            isSet={resolved?.isSet}
+            isPads={resolved?.isPads}
+            productName={resolved?.name}
+          />
         )}
+        <div ref={buyBoxRef}>
+          {product ? (
+            <PdpRealBuy product={product} content={resolved!} />
+          ) : (
+            <PdpPlaceholderBuyBox content={resolved!} />
+          )}
+        </div>
       </section>
 
       {resolved ? (

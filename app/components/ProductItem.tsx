@@ -1,10 +1,11 @@
 import {Link} from 'react-router';
-import {Image, Money} from '@shopify/hydrogen';
+import {Money} from '@shopify/hydrogen';
 import type {
   ProductItemFragment,
   CollectionItemFragment,
 } from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
+import {GradedImage} from '~/components/GradedImage';
 
 export function ProductItem({
   product,
@@ -23,12 +24,11 @@ export function ProductItem({
       to={variantUrl}
     >
       {image && (
-        <Image
+        <GradedImage
           alt={image.altText || product.title}
-          aspectRatio="1/1"
           data={image}
-          loading={loading}
-          sizes="(min-width: 45em) 400px, 100vw"
+          aspectRatio="1/1"
+          priority={loading === 'eager'}
         />
       )}
       <h4>{product.title}</h4>

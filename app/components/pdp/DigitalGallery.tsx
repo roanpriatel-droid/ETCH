@@ -1,37 +1,32 @@
 import {useState} from 'react';
 import type {ProductVariantFragment} from 'storefrontapi.generated';
 import {GradedImage} from '~/components/GradedImage';
-import {DeviceOutline, EngraveBackdrop} from './PdpArt';
+import {EngraveBackdrop} from './PdpArt';
+import {ProtocolMockup} from './ProtocolMockup';
 
 /**
- * PDP gallery — large primary slot + 3 thumbnail slots. Renders the Shopify
- * image when present (graded), otherwise an engraved device placeholder.
- * Thumbnails are decorative placeholders until real photography is shot.
+ * DigitalGallery — PDP gallery for digital products (The ETCH Method: Core/Form).
+ * Same brass-frame stage as the device gallery, but the placeholder is the
+ * protocol-cover engraving rather than the device silhouette.
  */
-export function PdpGallery({
+export function DigitalGallery({
   image,
-  isSet,
-  isPads,
   productName,
+  label,
 }: {
   image?: ProductVariantFragment['image'] | null;
-  isSet?: boolean;
-  isPads?: boolean;
   productName?: string;
+  /** Two-or-three-letter footer mark on the protocol cover */
+  label?: string;
 }) {
   const [activeThumb, setActiveThumb] = useState(0);
-  // placeholder thumbnail slots — swap for real shots later
-  const THUMBS = isPads
-    ? ['Pad set', 'Backing', 'Box']
-    : isSet
-      ? ['Core', 'Form', 'Method', 'Travel']
-      : ['Hero', 'In use', 'Method', 'Travel'];
-
-  const alt = productName ? `${productName} — product image` : 'ETCH device';
+  // placeholder thumbnail slots — swap for real shots when product photography lands
+  const THUMBS = ['Cover', 'Inside', 'Schedule', 'Web'];
+  const alt = productName ? `${productName} — protocol cover` : 'ETCH protocol';
 
   return (
     <div className="pdp-gallery">
-      <div className="pdp-primary" data-reveal aria-label="Product image">
+      <div className="pdp-primary" data-reveal aria-label="Protocol cover">
         <EngraveBackdrop />
         <div className="pdp-frame">
           {image ? (
@@ -43,15 +38,8 @@ export function PdpGallery({
               aspectRatio="3/4"
             />
           ) : (
-            <GradedImage alt={alt} tint={0.55}>
-              {isSet ? (
-                <span style={{display: 'flex', gap: 14, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%'}}>
-                  <DeviceOutline />
-                  <DeviceOutline />
-                </span>
-              ) : (
-                <DeviceOutline />
-              )}
+            <GradedImage alt={alt} tint={0.5}>
+              <ProtocolMockup label={label} />
             </GradedImage>
           )}
         </div>
@@ -63,22 +51,22 @@ export function PdpGallery({
         data-reveal
         style={{['--reveal-delay' as string]: '100ms'}}
       >
-        {THUMBS.map((label, i) => (
+        {THUMBS.map((thumb, i) => (
           <button
             type="button"
-            key={label}
+            key={thumb}
             className={`pdp-thumb${i === activeThumb ? ' is-active' : ''}`}
             role="tab"
             aria-selected={i === activeThumb}
-            aria-label={`${alt} — ${label} view`}
+            aria-label={`${alt} — ${thumb} view`}
             onClick={() => setActiveThumb(i)}
           >
             <span className="pdp-thumb-art" aria-hidden="true">
               <GradedImage alt="" tint={0.45}>
-                <DeviceOutline />
+                <ProtocolMockup label={label} />
               </GradedImage>
             </span>
-            <span className="pdp-thumb-label">{label}</span>
+            <span className="pdp-thumb-label">{thumb}</span>
           </button>
         ))}
       </div>

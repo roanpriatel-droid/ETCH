@@ -7,6 +7,7 @@ import {MethodOrderBump} from './MethodOrderBump';
 import type {PdpContent} from '~/lib/etch-pdp';
 
 function BuyShell({content, children}: {content: PdpContent; children: React.ReactNode}) {
+  const isDigital = content.kind === 'digital';
   return (
     <div className="pdp-buy">
       {content.isSet ? (
@@ -39,32 +40,63 @@ function BuyShell({content, children}: {content: PdpContent; children: React.Rea
 
       {children}
 
-      {!content.isPads ? <MethodOrderBump /> : null}
+      {/* Order bump is the device → Method upsell. Skip on digital (it IS the
+          Method) and on pads (consumable, not a device kit). */}
+      {!isDigital && !content.isPads ? <MethodOrderBump /> : null}
 
-      <div className="pdp-trust-row">
-        <span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
-          60-night money-back
-        </span>
-        <span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M3 7h11v9H3z" />
-            <path d="M14 10h4l3 3v3h-7" />
-            <circle cx="7" cy="18" r="2" />
-            <circle cx="17" cy="18" r="2" />
-          </svg>
-          Free shipping
-        </span>
-        <span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0" />
-            <path d="M12 7v5l3 2" />
-          </svg>
-          2-year warranty
-        </span>
-      </div>
+      {isDigital ? (
+        <div className="pdp-trust-row">
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 3v12" />
+              <polyline points="7,10 12,15 17,10" />
+              <line x1="4" y1="20" x2="20" y2="20" />
+            </svg>
+            Instant access
+          </span>
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 5h7a3 3 0 0 1 3 3v12" />
+              <path d="M20 5h-7a3 3 0 0 0-3 3v12" />
+            </svg>
+            PDF + web reader
+          </span>
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+              <polyline points="21,3 21,8 16,8" />
+              <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+              <polyline points="3,21 3,16 8,16" />
+            </svg>
+            Lifetime updates
+          </span>
+        </div>
+      ) : (
+        <div className="pdp-trust-row">
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            60-night money-back
+          </span>
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 7h11v9H3z" />
+              <path d="M14 10h4l3 3v3h-7" />
+              <circle cx="7" cy="18" r="2" />
+              <circle cx="17" cy="18" r="2" />
+            </svg>
+            Free shipping
+          </span>
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+            2-year warranty
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -135,7 +167,7 @@ export function PdpPlaceholderBuyBox({content}: {content: PdpContent}) {
         </button>
       )}
 
-      {!content.isPads ? (
+      {!content.isPads && content.kind !== 'digital' ? (
         <p className="pdp-founding-line">
           Founding release — each unit numbered, limited allocation.
         </p>

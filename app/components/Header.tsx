@@ -28,9 +28,9 @@ const NAV: NavItem[] = [
 ];
 
 const ANNOUNCEMENTS = [
-  'Free carbon-neutral shipping worldwide',
-  '60-night money-back guarantee',
-  'Founding release — each unit numbered',
+  'Free, carbon-neutral shipping · worldwide',
+  '60-night money-back · 2-year warranty',
+  'Founding release · No. 001 · numbered allocation',
 ];
 
 export function Header({isLoggedIn, cart}: HeaderProps) {
