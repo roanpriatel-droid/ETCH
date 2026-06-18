@@ -1,5 +1,4 @@
-import {redirect, useLoaderData} from 'react-router';
-import {useState} from 'react';
+import {useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
@@ -9,173 +8,153 @@ import {
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
-import {PdpSections} from '~/components/pdp/PdpSections';
+import type {ProductFragment} from 'storefrontapi.generated';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {getPdpContent, type PdpContent} from '~/lib/etch-pdp';
+import {PdpGallery} from '~/components/pdp/PdpGallery';
+import {
+  PdpRealBuyBox,
+  PdpPlaceholderBuyBox,
+} from '~/components/pdp/PdpBuyBox';
+import {PdpSections} from '~/components/pdp/PdpSections';
 
 export const meta: Route.MetaFunction = ({data}) => {
+  const name = data?.content?.name ?? 'ETCH';
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {title: `${name} — ETCH`},
+    {
+      name: 'description',
+      content:
+        data?.content?.shortDesc ??
+        'ETCH — Definition, engineered. Premium EMS for tone and strength.',
+    },
     {
       rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
+      href: `/products/${data?.handle ?? ''}`,
     },
   ];
 };
 
 export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
-  return {...deferredData, ...criticalData};
+  return criticalData;
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
 async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
-
   if (!handle) {
-    throw new Error('Expected product handle to be defined');
+    throw new Response('Missing product handle', {status: 404});
   }
 
-  const [{product}] = await Promise.all([
-    storefront.query(PRODUCT_QUERY, {
+  // Look up config content. May be null for unknown handles.
+  const content = getPdpContent(handle);
+
+  // Try Shopify — Mock.shop or empty real shops will simply return no product.
+  // Never throw here; we fall back to config when product is missing.
+  let product: ProductFragment | null = null;
+  try {
+    const {product: shopifyProduct} = await storefront.query(PRODUCT_QUERY, {
       variables: {handle, selectedOptions: getSelectedProductOptions(request)},
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
-
-  if (!product?.id) {
-    throw new Response(null, {status: 404});
+    });
+    if (shopifyProduct?.id) {
+      product = shopifyProduct;
+      redirectIfHandleIsLocalized(request, {handle, data: shopifyProduct});
+    }
+  } catch {
+    // Storefront-API errors (network, missing config, etc.) are non-fatal here —
+    // we fall back to config content. Real failures surface in monitoring.
+    product = null;
   }
 
-  // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: product});
+  // Hard 404 only when there's neither a real product nor config content for the handle.
+  if (!product && !content) {
+    throw new Response('Not Found', {status: 404});
+  }
 
   return {
+    handle,
     product,
+    content,
+    isPlaceholder: !product,
   };
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context, params}: Route.LoaderArgs) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
-
-  return {};
-}
-
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
-
-  // Optimistically selects a variant with given available variant information
-  const selectedVariant = useOptimisticVariant(
-    product.selectedOrFirstAvailableVariant,
-    getAdjacentAndFirstAvailableVariants(product),
-  );
-
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
-  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
-
-  // Get the product options array
-  const productOptions = getProductOptions({
-    ...product,
-    selectedOrFirstAvailableVariant: selectedVariant,
-  });
-
-  const {title, descriptionHtml} = product;
+  const {handle, product, content} = useLoaderData<typeof loader>();
+  // content is guaranteed when we reach this component (else 404 above)
+  const resolved = (content ?? null) as PdpContent | null;
 
   return (
     <>
-      <div className="product">
-        <ProductImage image={selectedVariant?.image} />
-        <div className="product-main">
-          <p className="eyebrow">EMS muscle activation</p>
-          <h1>{title}</h1>
-          <ProductPrice
-            price={selectedVariant?.price}
-            compareAtPrice={selectedVariant?.compareAtPrice}
-          />
-          <br />
-          <ProductForm
-            productOptions={productOptions}
-            selectedVariant={selectedVariant}
-          />
-          <MethodOrderBump />
-          <br />
-          <h4>Description</h4>
-          <br />
-          <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-          <br />
-        </div>
-        <Analytics.ProductView
-          data={{
-            products: [
-              {
-                id: product.id,
-                title: product.title,
-                price: selectedVariant?.price.amount || '0',
-                vendor: product.vendor,
-                variantId: selectedVariant?.id || '',
-                variantTitle: selectedVariant?.title || '',
-                quantity: 1,
-              },
-            ],
-          }}
+      <section className="pdp-top">
+        <PdpGallery
+          image={product?.selectedOrFirstAvailableVariant?.image ?? null}
+          isSet={resolved?.isSet}
+          isPads={resolved?.isPads}
         />
-      </div>
-      <PdpSections handle={product.handle} />
+        {product ? (
+          <PdpRealBuy product={product} content={resolved!} />
+        ) : (
+          <PdpPlaceholderBuyBox content={resolved!} />
+        )}
+      </section>
+
+      {resolved ? (
+        <PdpSections
+          content={resolved}
+          handle={handle}
+          productUrl={`/products/${handle}`}
+        />
+      ) : null}
     </>
   );
 }
 
 /**
- * Order bump — adds "The ETCH Method" to the kit at a bundle price.
- * Presentational by default. To make it functional, give it the Method
- * product's variant id and append it to the AddToCartButton `lines` array
- * (see CLAUDE.md → "Order bump wiring").
+ * Real buy box wrapper — uses Shopify hooks only when a product is present.
+ * Separated to keep hook order stable (we never conditionally call hooks).
  */
-function MethodOrderBump() {
-  const [on, setOn] = useState(true);
+function PdpRealBuy({
+  product,
+  content,
+}: {
+  product: ProductFragment;
+  content: PdpContent;
+}) {
+  const selectedVariant = useOptimisticVariant(
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
+  );
+  useSelectedOptionInUrlParam(selectedVariant?.selectedOptions ?? []);
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
+
   return (
-    <button
-      type="button"
-      className={`order-bump${on ? ' on' : ''}`}
-      onClick={() => setOn((v) => !v)}
-      aria-pressed={on}
-    >
-      <span className="check">
-        {on ? (
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A140A" strokeWidth="3">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        ) : null}
-      </span>
-      <span>
-        <span className="nm">
-          Add <b>The ETCH Method</b> — the 8-week protocol
-        </span>
-        <span className="ds">Get the most from your device from day one</span>
-      </span>
-      <span className="pr">
-        <span className="add">+ $19</span>
-        <span className="was">$27 on its own</span>
-      </span>
-    </button>
+    <>
+      <PdpRealBuyBox
+        content={content}
+        productOptions={productOptions}
+        selectedVariant={selectedVariant}
+      />
+      <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
+      />
+    </>
   );
 }
 

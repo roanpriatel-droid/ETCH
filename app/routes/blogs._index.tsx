@@ -1,80 +1,108 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/blogs._index';
 import {getPaginationVariables} from '@shopify/hydrogen';
-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import type {BlogsQuery} from 'storefrontapi.generated';
+import {PageHero} from '~/components/PageHero';
 
 type BlogNode = BlogsQuery['blogs']['nodes'][0];
 
-export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Blogs`}];
-};
+export const meta: Route.MetaFunction = () => [
+  {title: 'Journal — ETCH'},
+  {
+    name: 'description',
+    content: 'Notes from the cohort — training, the Method, the science.',
+  },
+];
 
-export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+export async function loader({request, context}: Route.LoaderArgs) {
+  const paginationVariables = getPaginationVariables(request, {pageBy: 10});
 
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
-
-  return {...deferredData, ...criticalData};
-}
-
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context, request}: Route.LoaderArgs) {
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 10,
-  });
-
-  const [{blogs}] = await Promise.all([
-    context.storefront.query(BLOGS_QUERY, {
-      variables: {
-        ...paginationVariables,
-      },
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  // Blogs may not exist on Mock.shop or before the real shop is wired —
+  // never 404 on the index; render the empty state instead.
+  let blogs: BlogNode[] = [];
+  try {
+    const data = await context.storefront.query(BLOGS_QUERY, {
+      variables: {...paginationVariables},
+    });
+    blogs = data.blogs?.nodes ?? [];
+  } catch {
+    blogs = [];
+  }
 
   return {blogs};
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context}: Route.LoaderArgs) {
-  return {};
-}
-
 export default function Blogs() {
   const {blogs} = useLoaderData<typeof loader>();
+  const hasBlogs = blogs.length > 0;
 
   return (
-    <div className="blogs">
-      <h1>Blogs</h1>
-      <div className="blogs-grid">
-        <PaginatedResourceSection<BlogNode> connection={blogs}>
-          {({node: blog}) => (
-            <Link
-              className="blog"
-              key={blog.handle}
-              prefetch="intent"
-              to={`/blogs/${blog.handle}`}
-            >
-              <h2>{blog.title}</h2>
-            </Link>
+    <>
+      <PageHero
+        eyebrow="The journal"
+        headline="Notes from"
+        serif="the cohort"
+        lede="Training, the Method, the science behind the contraction. Long-form, infrequent, useful."
+      />
+
+      <section className="etch-section ivory">
+        <div className="wrap">
+          {hasBlogs ? (
+            <>
+              <div className="sec-head" data-reveal>
+                <p className="eyebrow">All sections</p>
+                <h2>
+                  Choose a <span className="serif">channel</span>.
+                </h2>
+              </div>
+              <div className="blogs-grid" data-reveal>
+                {blogs.map((blog) => (
+                  <Link
+                    className="blog-tile"
+                    key={blog.handle}
+                    to={`/blogs/${blog.handle}`}
+                    prefetch="intent"
+                  >
+                    <p className="eyebrow">Section</p>
+                    <h3>
+                      {blog.title} <span className="serif">→</span>
+                    </h3>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <EmptyState />
           )}
-        </PaginatedResourceSection>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="empty-state" data-reveal>
+      <p className="eyebrow">Coming soon</p>
+      <h2>
+        The Journal is being <span className="serif">forged</span>.
+      </h2>
+      <p className="lede">
+        Long-form notes on training, recovery and the Method are on the way.
+        In the meantime, the protocol itself is the read.
+      </p>
+      <div style={{display: 'flex', gap: 16, marginTop: 24, flexWrap: 'wrap'}}>
+        <Link className="btn" to="/pages/the-method" prefetch="intent">
+          Read the Method
+        </Link>
+        <Link className="btn-ghost" to="/pages/science" prefetch="intent">
+          The science →
+        </Link>
       </div>
     </div>
   );
 }
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/blog
 const BLOGS_QUERY = `#graphql
   query Blogs(
     $country: CountryCode
@@ -84,12 +112,7 @@ const BLOGS_QUERY = `#graphql
     $last: Int
     $startCursor: String
   ) @inContext(country: $country, language: $language) {
-    blogs(
-      first: $first,
-      last: $last,
-      before: $startCursor,
-      after: $endCursor
-    ) {
+    blogs(first: $first, last: $last, before: $startCursor, after: $endCursor) {
       pageInfo {
         hasNextPage
         hasPreviousPage
@@ -99,10 +122,7 @@ const BLOGS_QUERY = `#graphql
       nodes {
         title
         handle
-        seo {
-          title
-          description
-        }
+        seo { title description }
       }
     }
   }
