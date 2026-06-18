@@ -1,4 +1,4 @@
-import {Suspense} from 'react';
+import {Suspense, useEffect, useState} from 'react';
 import {Await, NavLink, useAsyncValue} from 'react-router';
 import {
   type CartViewPayload,
@@ -17,73 +17,84 @@ interface HeaderProps {
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  publicStoreDomain,
-}: HeaderProps) {
-  const {menu} = header;
+type NavItem = {label: string; to: string; sub?: string};
+
+const NAV: NavItem[] = [
+  {label: 'Flux Core', to: '/products/etch-flux-core', sub: 'Abs'},
+  {label: 'Flux Form', to: '/products/etch-flux-form', sub: 'Glutes'},
+  {label: 'The Set', to: '/products/the-etch-set'},
+  {label: 'The Method', to: '/pages/the-method'},
+  {label: 'Science', to: '/pages/science'},
+];
+
+const ANNOUNCEMENTS = [
+  'Free carbon-neutral shipping worldwide',
+  '60-night money-back guarantee',
+  'Founding release — each unit numbered',
+];
+
+export function Header({isLoggedIn, cart}: HeaderProps) {
   return (
-    <header className="header">
-      <NavLink prefetch="intent" to="/" end>
-        <span className="brand-mark">
-          ETCH<span className="dot">.</span>
-        </span>
-      </NavLink>
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-    </header>
+    <>
+      <AnnouncementBar />
+      <header className="header">
+        <NavLink prefetch="intent" to="/" end>
+          <span className="brand-mark">
+            ETCH<span className="dot">.</span>
+          </span>
+        </NavLink>
+        <HeaderMenu viewport="desktop" />
+        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      </header>
+    </>
   );
 }
 
-export function HeaderMenu({
-  menu,
-  primaryDomainUrl,
-  viewport,
-  publicStoreDomain,
-}: {
-  menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
-  viewport: Viewport;
-  publicStoreDomain: HeaderProps['publicStoreDomain'];
-}) {
+function AnnouncementBar() {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % ANNOUNCEMENTS.length);
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <div className="announcement-bar" role="status" aria-live="polite">
+      <div className="ann-wrap">
+        {ANNOUNCEMENTS.map((msg, i) => (
+          <span
+            key={msg}
+            className={`ann-msg${i === index ? ' is-active' : ''}`}
+            aria-hidden={i !== index}
+          >
+            {msg}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function HeaderMenu({viewport}: {viewport: Viewport}) {
   const className = `header-menu-${viewport}`;
   const {close} = useAside();
-
   return (
     <nav className={className} role="navigation">
-      {viewport === 'mobile' && (
-        <NavLink end onClick={close} prefetch="intent" to="/">
-          Home
+      {NAV.map((item) => (
+        <NavLink
+          key={item.to}
+          className="header-menu-item"
+          prefetch="intent"
+          to={item.to}
+          onClick={viewport === 'mobile' ? close : undefined}
+        >
+          <span className="nav-label">{item.label}</span>
+          {item.sub ? <span className="nav-sub">{item.sub}</span> : null}
         </NavLink>
-      )}
-      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
-        if (!item.url) return null;
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        return (
-          <NavLink
-            className="header-menu-item"
-            end
-            key={item.id}
-            onClick={close}
-            prefetch="intent"
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
+      ))}
     </nav>
   );
 }
@@ -114,6 +125,7 @@ function HeaderMenuMobileToggle() {
     <button
       className="header-menu-mobile-toggle reset"
       onClick={() => open('mobile')}
+      aria-label="Open menu"
     >
       <h3>☰</h3>
     </button>
@@ -167,45 +179,3 @@ function CartBanner() {
   const cart = useOptimisticCart(originalCart);
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
 }
-
-const FALLBACK_HEADER_MENU = {
-  id: 'gid://shopify/Menu/199655587896',
-  items: [
-    {
-      id: 'gid://shopify/MenuItem/1',
-      resourceId: null,
-      tags: [],
-      title: 'The Devices',
-      type: 'HTTP',
-      url: '/collections/all',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/2',
-      resourceId: null,
-      tags: [],
-      title: 'The Method',
-      type: 'HTTP',
-      url: '/pages/the-method',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/3',
-      resourceId: null,
-      tags: [],
-      title: 'Science',
-      type: 'HTTP',
-      url: '/pages/science',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/4',
-      resourceId: null,
-      tags: [],
-      title: 'Journal',
-      type: 'HTTP',
-      url: '/blogs/journal',
-      items: [],
-    },
-  ],
-};

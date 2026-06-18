@@ -1,4 +1,5 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+import {useEffect} from 'react';
 import {
   Outlet,
   useRouteError,
@@ -8,6 +9,7 @@ import {
   Meta,
   Scripts,
   ScrollRestoration,
+  useLocation,
   useRouteLoaderData,
 } from 'react-router';
 import type {Route} from './+types/root';
@@ -175,6 +177,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
 
 export default function App() {
   const data = useRouteLoaderData<RootLoader>('root');
+  useScrollReveal();
 
   if (!data) {
     return <Outlet />;
@@ -191,6 +194,40 @@ export default function App() {
       </PageLayout>
     </Analytics.Provider>
   );
+}
+
+/**
+ * Scroll-reveal hook — observes every `[data-reveal]` element and toggles
+ * `.is-revealed` when it crosses the viewport threshold. Respects
+ * `prefers-reduced-motion`. Re-scans the DOM on every client navigation so
+ * elements rendered by new routes are picked up.
+ */
+function useScrollReveal() {
+  const location = useLocation();
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const targets = document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-revealed)');
+    if (reduce) {
+      targets.forEach((el) => el.classList.add('is-revealed'));
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            obs.unobserve(entry.target);
+          }
+        }
+      },
+      {threshold: 0.12, rootMargin: '0px 0px -8% 0px'},
+    );
+    targets.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [location.pathname, location.search]);
 }
 
 export function ErrorBoundary() {

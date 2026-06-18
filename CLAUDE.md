@@ -6,22 +6,71 @@ Tagline: **Definition, engineered.**
 
 ---
 
-## 1 · Brand system (already implemented in `app/styles/app.css`)
+## 1 · Forge design system (source of truth: `app/styles/app.css`)
 
-Concept: **ETCH as engraving** — the body rendered as an intaglio/contour surface (= muscle definition + the EMS waveform). Premium look, with direct-response conversion mechanics sitting underneath (kit ladder, order bump, founding-cohort scarcity, guarantee). Never neon, never fake-luxury terracotta.
+Concept: **ETCH as engraving** — the body rendered as an intaglio/contour surface (= muscle definition + the EMS waveform). Premium look, with direct-response conversion mechanics sitting underneath (kit ladder, order bump, founding-cohort scarcity, guarantee). Never neon, never fake-luxury terracotta, **never flat-black-plus-one-accent**. Depth comes from ember-lit gradients, not from a flatter darker shade.
 
-**Tokens** (`:root` in `app/styles/app.css`):
+### Tokens (`:root` in `app/styles/app.css`)
 ```
---ink #15140F   --plate #1A1C20   --plate-2 #202329
---paper #EAE5D9 --bone #F6F2EA
---brass #A98449  --brass-soft #C2A06A  --brass-deep #7C5E30
---mute #6F6A5E
+darks (warm, ember-tinted)
+  --obsidian #141009   --char #1C160E   --char-2 #251D12   --char-3 #2E2415
+
+lights (warm parchment, never cold)
+  --ivory #F6F1E7      --parchment #ECE4D4   --sand #E2D7C2
+
+ink                    --ink #1A1610
+
+brass (the only luxury accent)
+  --brass #B8893F      --brass-light #DCB36A   --brass-deep #8A6526
+
+oxblood (urgency / limited / live-stock — USED SPARINGLY)
+  --oxblood #7A2E22    --oxblood-light #A04434
+
+mute (secondary text)
+  --mute #6B6456       --mute-d #9A9080
+
+dividers
+  --line rgba(26,22,16,.13)        --line-d rgba(220,179,106,.18)
 ```
-**Type:** Archivo (grotesque display/UI) · Fraunces (serif italic accent only — the `.serif` class) · IBM Plex Mono (instrument labels, the `.eyebrow` class). Loaded via Google Fonts in `app/root.tsx` → `links()`.
+Build everything from these. **No other colors. No other fonts.**
 
-**Signature element:** the contour-engraving SVG (`Engraving` in `app/routes/_index.tsx`). Reuse `.engrave` strokes for section dividers/PDP art. Spend boldness here; keep everything else quiet.
+### Gradients & glows (where the depth lives)
+```
+--ember-bg     radial brass glow + oxblood floor + obsidian gradient — applied to every dark section
+--brass-grad   linear-gradient(135deg,#DCB36A,#B8893F) — primary button + cart checkout
+--brass-glow   0 18px 50px -22px rgba(184,137,63,.55) — sits under buttons / accent shadows
+--ivory-grad   subtle parchment fall — used on aside header
+```
+Dark sections (`.etch-section.plate`, `.etch-hero`, `.footer`) **never** use a flat dark color — they use `var(--ember-bg)`. Primary buttons use `--brass-grad` with an inset highlight + the glow. Oxblood is reserved for urgency/limited copy only (`.urgency`).
 
-**Compliance (non-negotiable in all copy):** EMS tones/strengthens muscle. **Never** claim weight loss, fat reduction, or calorie burn. No fake price anchors. Keep the disclaimer in the footer. This is what keeps the brand premium *and* out of FTC/Meta-ad trouble.
+### Type
+- **Archivo** (sans, display & UI), **Fraunces** italic (`.serif` accent word only), **IBM Plex Mono** (instrument labels / `.eyebrow`). Loaded in `app/root.tsx` → `links()`.
+- Hero `h1`: `clamp(54px, 10.5vw, 150px)` · `line-height:.9` · `letter-spacing:-.035em`.
+- Section `h2`: `clamp(34px, 5vw, 68px)` · `line-height:1.0` · `letter-spacing:-.02em`.
+- Eyebrow: Mono 11px · letter-spacing `.32em` · uppercase · `var(--brass)` (auto switches to `--brass-light` on dark sections).
+- Every headline gets ONE Fraunces italic accent word inside `<span class="serif">`. That's the signature — don't decorate beyond it.
+
+### Spacing
+Sections are large. Vertical padding is `var(--section-pad)` = `clamp(80px, 12vh, 160px)`. Generous, composed whitespace — never an empty void; balance every large negative space with a strong visual element (engraving art, instrument plate, founding meter).
+
+### Primitives (refactored to the new tokens)
+- `.etch-section` + modifiers: `.dark`/`.plate` (ember-bg), `.parchment`/`.paper`, `.ivory`/`.bone`, `.sand`. The legacy class names (`.plate` / `.paper` / `.bone`) remain as semantic aliases.
+- `.sec-head` (max 760px), `.eyebrow`, `.serif`, `.lede`, `.wrap` (max 1280px).
+- `.btn` (brass-grad + inset highlight + glow + lift), `.btn-ghost` (transparent w/ border, ink on light, brass-light on dark).
+- `.engrave` (signature contour strokes — opacity .55, .22 for `.faint`).
+- `.product-item`, `.mech-cell`, `.method-card`, `.pdp-step`, `.guarantee-band`, `.order-bump`, `.spec-table`, `.box-grid`, `.pdp-faq`.
+
+### Signature element
+The contour-engraving SVG (`Engraving` in `app/routes/_index.tsx`). Reuse `.engrave` strokes for section dividers / PDP art. Wrap any pure-engraving SVG in `class="engrave-draw"` to opt into the draw-on stroke animation. Spend boldness here; keep everything else quiet.
+
+### Motion
+- **Scroll reveal:** add `data-reveal` to any element. The observer in `app/root.tsx` (`useScrollReveal`) toggles `.is-revealed` when it crosses the viewport; CSS fades opacity + translates Y. Stagger with inline `style={{['--reveal-delay' as string]: '120ms'}}`. Respects `prefers-reduced-motion`. Re-scans on every navigation.
+- **Engraving draw-on:** add `engrave-draw` className to the SVG. Combined with `data-reveal`, strokes draw on via `stroke-dashoffset`.
+- **Hover lifts:** built into `.btn`, `.btn-ghost`, `.product-item`, `.pdp-step`. Tasteful — `.2–.7s`, cubic-bezier easing.
+- Keep motion fast and quiet. No bouncing, no parallax, no spinning.
+
+### Compliance (non-negotiable in all copy)
+EMS **tones and strengthens** muscle. **Never** claim weight loss, fat reduction, or calorie burn. No fake price anchors. Keep the disclaimer in the footer. This is what keeps the brand premium *and* out of FTC/Meta-ad trouble.
 
 ---
 
