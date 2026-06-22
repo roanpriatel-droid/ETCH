@@ -1,16 +1,122 @@
-import {useLoaderData, Link} from 'react-router';
+import {useEffect, useRef} from 'react';
+import {Form, useActionData, useLoaderData, useNavigation, Link} from 'react-router';
+import {Money} from '@shopify/hydrogen';
+import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import type {Route} from './+types/_index';
 import {MockShopNotice} from '~/components/MockShopNotice';
 import {DEVICES, THE_SET, type EtchProduct} from '~/lib/etch-products';
+import {LAUNCH} from '~/lib/launch-state';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: 'ETCH — Definition, engineered'}];
 };
 
+type ShopifyShowcaseProduct = {
+  handle: string;
+  title: string;
+  price: MoneyV2 | null;
+  featuredImage: {
+    url: string;
+    altText: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+};
+
+type ShowcaseNode = {
+  id: string;
+  handle: string;
+  title: string;
+  featuredImage: {
+    url: string;
+    altText: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+  priceRange: {minVariantPrice: MoneyV2} | null;
+};
+
 export async function loader({context}: Route.LoaderArgs) {
-  return {
-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
-  };
+  const isShopLinked = Boolean(context.env.PUBLIC_STORE_DOMAIN);
+
+  // Query Shopify for the two devices by handle. Failures are non-fatal —
+  // we always have local config to fall back to.
+  let shopifyDevices: ShopifyShowcaseProduct[] = [];
+  if (isShopLinked) {
+    try {
+      const handleQuery = DEVICES.map((d) => `handle:${d.handle}`).join(' OR ');
+      const {products} = await context.storefront.query(SHOWCASE_QUERY, {
+        variables: {query: handleQuery},
+        cache: context.storefront.CacheShort(),
+      });
+      const nodes = (products?.nodes ?? []) as ShowcaseNode[];
+      shopifyDevices = nodes
+        .filter((p): p is ShowcaseNode => Boolean(p?.id))
+        .map((p) => ({
+          handle: p.handle,
+          title: p.title,
+          price: p.priceRange?.minVariantPrice ?? null,
+          featuredImage: p.featuredImage
+            ? {
+                url: p.featuredImage.url,
+                altText: p.featuredImage.altText ?? null,
+                width: p.featuredImage.width ?? null,
+                height: p.featuredImage.height ?? null,
+              }
+            : null,
+        }));
+    } catch {
+      shopifyDevices = [];
+    }
+  }
+
+  return {isShopLinked, shopifyDevices};
+}
+
+/**
+ * Cohort email-capture action.
+ *
+ * Creates a Shopify customer with a random password and the email the visitor
+ * submitted. Subscribing them to marketing has to be enabled separately in the
+ * Shopify admin notification settings (post-2025 SF API removed acceptsMarketing
+ * on customerCreate — emails are flagged for confirmation instead).
+ *
+ * For higher volume / better deliverability, swap this for a Klaviyo /
+ * Mailchimp / Customer.io POST. The contract is the same: read `email`, return
+ * `{ok: boolean, message: string}`.
+ */
+export async function action({request, context}: Route.ActionArgs) {
+  const formData = await request.formData();
+  const email = String(formData.get('email') ?? '').trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return {ok: false, message: 'Please enter a valid email.'};
+  }
+  if (!context.env.PUBLIC_STORE_DOMAIN) {
+    return {
+      ok: false,
+      message:
+        'The store isn’t linked yet — cohort signup will activate once it is.',
+    };
+  }
+  try {
+    const password = `etch_${crypto.randomUUID()}`;
+    const {customerCreate} = await context.storefront.mutate(
+      CUSTOMER_CREATE_MUTATION,
+      {variables: {input: {email, password}}},
+    );
+    const err = customerCreate?.customerUserErrors?.[0];
+    if (err) {
+      // CUSTOMER_DISABLED = already exists (good enough — treat as success).
+      if (err.code === 'CUSTOMER_DISABLED' || err.code === 'TAKEN') {
+        return {ok: true, message: 'You’re on the list.'};
+      }
+      return {ok: false, message: err.message || 'Something stalled. Try again.'};
+    }
+    return {ok: true, message: 'You’re on the list — watch for No. 001.'};
+  } catch {
+    return {ok: false, message: 'Something stalled. Try again.'};
+  }
 }
 
 export default function Homepage() {
@@ -60,12 +166,14 @@ function Hero() {
             </Link>
           </div>
           <div className="trust">
-            <div className="item">
-              <div className="k">Rated</div>
-              <div className="v">
-                <span className="stars">★★★★★</span> 4.9 · 2,300+ reviews
+            {LAUNCH.heroReviewBadge ? (
+              <div className="item">
+                <div className="k">Rated</div>
+                <div className="v">
+                  <span className="stars">★★★★★</span> 4.9 · 2,300+ reviews
+                </div>
               </div>
-            </div>
+            ) : null}
             <div className="item">
               <div className="k">Guarantee</div>
               <div className="v">60 nights, refunded</div>
@@ -109,34 +217,46 @@ const STATS = [
 const LOGOS = ['FORBES', 'GQ', 'MEN’S HEALTH', 'WIRED'];
 
 function TrustStrip() {
+  if (!LAUNCH.trustStats && !LAUNCH.pressLogos) return null;
   return (
     <section className="trust-strip" data-reveal>
       <div className="wrap">
-        <div className="stat-grid">
-          {STATS.map((s) => (
-            <div className="stat-cell" key={s.k}>
-              <div className="k">{s.k}</div>
-              <div className="v">{s.v}</div>
-            </div>
-          ))}
-        </div>
-        <div className="logo-row">
-          <span className="label">As featured in</span>
-          {LOGOS.map((l) => (
-            <span className="logo-slot" key={l}>
-              {l}
-            </span>
-          ))}
-        </div>
+        {LAUNCH.trustStats ? (
+          <div className="stat-grid">
+            {STATS.map((s) => (
+              <div className="stat-cell" key={s.k}>
+                <div className="k">{s.k}</div>
+                <div className="v">{s.v}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {LAUNCH.pressLogos ? (
+          <div className="logo-row">
+            <span className="label">As featured in</span>
+            {LOGOS.map((l) => (
+              <span className="logo-slot" key={l}>
+                {l}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
 }
 
 /* ================================================================
-   PRODUCTS SHOWCASE — config-driven, always renders Core + Form
+   PRODUCTS SHOWCASE — merges Shopify products with local config copy
    ================================================================ */
 function ProductsShowcase() {
+  const {shopifyDevices} = useLoaderData<typeof loader>();
+  // Merge by handle: Shopify supplies title/price/image, config supplies
+  // tagline/target/bullets. Falls back cleanly when shop isn't linked.
+  const cards = DEVICES.map((cfg) => {
+    const shop = shopifyDevices.find((s) => s.handle === cfg.handle);
+    return {cfg, shop};
+  });
   return (
     <section className="etch-section ivory">
       <div className="wrap">
@@ -152,8 +272,8 @@ function ProductsShowcase() {
           </p>
         </div>
         <div className="products-row">
-          {DEVICES.map((p, i) => (
-            <ProductCardLg key={p.handle} product={p} index={i} />
+          {cards.map(({cfg, shop}, i) => (
+            <ProductCardLg key={cfg.handle} cfg={cfg} shop={shop} index={i} />
           ))}
         </div>
       </div>
@@ -162,13 +282,16 @@ function ProductsShowcase() {
 }
 
 function ProductCardLg({
-  product,
+  cfg,
+  shop,
   index,
 }: {
-  product: EtchProduct;
+  cfg: EtchProduct;
+  shop: ShopifyShowcaseProduct | undefined;
   index: number;
 }) {
-  const [head, tail] = product.name.split('—').map((s) => s.trim());
+  const displayName = shop?.title ?? cfg.name;
+  const [head, tail] = displayName.split('—').map((s) => s.trim());
   return (
     <article
       className="product-card-lg"
@@ -176,10 +299,20 @@ function ProductCardLg({
       style={{['--reveal-delay' as string]: `${index * 100}ms`}}
     >
       <div className="pc-image">
-        <DeviceOutline />
+        {shop?.featuredImage ? (
+          <img
+            src={shop.featuredImage.url}
+            alt={shop.featuredImage.altText ?? displayName}
+            width={shop.featuredImage.width ?? undefined}
+            height={shop.featuredImage.height ?? undefined}
+            loading="lazy"
+          />
+        ) : (
+          <DeviceOutline />
+        )}
       </div>
       <div className="pc-body">
-        <span className="pc-target">{product.target}</span>
+        <span className="pc-target">{cfg.target}</span>
         <h3 className="pc-name">
           {head}
           {tail ? (
@@ -189,19 +322,21 @@ function ProductCardLg({
             </>
           ) : null}
         </h3>
-        <p className="pc-tag">{product.tagline}</p>
+        <p className="pc-tag">{cfg.tagline}</p>
         <ul className="pc-bullets">
-          {product.bullets.map((b) => (
+          {cfg.bullets.map((b) => (
             <li key={b}>{b}</li>
           ))}
         </ul>
         <div className="pc-foot">
-          <span className="pc-price">{product.price}</span>
+          <span className="pc-price">
+            {shop?.price ? <Money data={shop.price} /> : cfg.price}
+          </span>
           <div className="pc-actions">
-            <Link className="btn" to={product.url}>
+            <Link className="btn" to={cfg.url}>
               Add to cart
             </Link>
-            <Link className="btn-ghost" to={product.url}>
+            <Link className="btn-ghost" to={cfg.url}>
               Learn more →
             </Link>
           </div>
@@ -386,6 +521,7 @@ const TESTIMONIALS = [
 ];
 
 function Results() {
+  if (!LAUNCH.testimonials) return null;
   return (
     <section className="etch-section parchment">
       <div className="wrap">
@@ -454,13 +590,17 @@ function Founding() {
           data-reveal
           style={{['--reveal-delay' as string]: '120ms'}}
         >
-          <div className="meter">
-            <i />
-          </div>
-          <div className="meter-label">
-            <span>Allocation claimed</span>
-            <span>68%</span>
-          </div>
+          {LAUNCH.scarcityMeter ? (
+            <>
+              <div className="meter">
+                <i />
+              </div>
+              <div className="meter-label">
+                <span>Allocation claimed</span>
+                <span>68%</span>
+              </div>
+            </>
+          ) : null}
           <div className="guarantee">
             <Shield />
             Train for 60 nights. Send it back for a full refund if it isn’t for
@@ -543,6 +683,14 @@ function Faq() {
    EMAIL CAPTURE — founding cohort signup (presentational)
    ================================================================ */
 function EmailCapture() {
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submitting = navigation.state === 'submitting';
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (actionData?.ok) formRef.current?.reset();
+  }, [actionData]);
+
   return (
     <section className="email-capture">
       <div className="wrap">
@@ -557,11 +705,13 @@ function EmailCapture() {
             ships.
           </p>
         </div>
-        <form
+        <Form
+          method="post"
+          replace
+          ref={formRef}
           className="email-form"
           data-reveal
           style={{['--reveal-delay' as string]: '120ms'}}
-          onSubmit={(e) => e.preventDefault()}
         >
           <label className="label" htmlFor="email-cohort">
             Reserve your unit
@@ -569,20 +719,36 @@ function EmailCapture() {
           <div className="row">
             <input
               id="email-cohort"
+              name="email"
               type="email"
               required
               placeholder="you@anywhere.com"
               autoComplete="email"
+              disabled={submitting}
             />
-            <button type="submit" className="btn">
-              Join the cohort
+            <button type="submit" className="btn" disabled={submitting}>
+              {submitting ? 'Reserving…' : 'Join the cohort'}
             </button>
           </div>
-          <p className="fine">
-            One email a week, no fluff. We never share your address — see our{' '}
-            <a href="/policies/privacy-policy">privacy policy</a>.
-          </p>
-        </form>
+          {actionData ? (
+            <p
+              className="fine"
+              role="status"
+              style={{
+                color: actionData.ok
+                  ? 'var(--brass-light)'
+                  : 'var(--oxblood-light)',
+              }}
+            >
+              {actionData.message}
+            </p>
+          ) : (
+            <p className="fine">
+              One email a week, no fluff. We never share your address — see our{' '}
+              <a href="/policies/privacy-policy">privacy policy</a>.
+            </p>
+          )}
+        </Form>
       </div>
     </section>
   );
@@ -739,3 +905,49 @@ function DeviceOutline() {
     </svg>
   );
 }
+
+/* ================================================================
+   QUERIES
+   ================================================================ */
+const SHOWCASE_QUERY = `#graphql
+  query HomepageShowcase(
+    $query: String!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    products(first: 10, query: $query) {
+      nodes {
+        id
+        handle
+        title
+        featuredImage {
+          url
+          altText
+          width
+          height
+        }
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+        }
+      }
+    }
+  }
+` as const;
+
+const CUSTOMER_CREATE_MUTATION = `#graphql
+  mutation HomepageCohortCustomerCreate($input: CustomerCreateInput!) {
+    customerCreate(input: $input) {
+      customer {
+        id
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+` as const;

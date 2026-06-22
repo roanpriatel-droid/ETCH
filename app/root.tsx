@@ -52,6 +52,9 @@ export const meta: Route.MetaFunction = () => [
     content:
       'Premium EMS for tone and strength. Twenty minutes of deep activation, the 8-week Method, the founding release.',
   },
+  {property: 'og:image', content: '/og-image.jpg'},
+  {property: 'og:image:width', content: '1200'},
+  {property: 'og:image:height', content: '630'},
   {name: 'twitter:card', content: 'summary_large_image'},
   {name: 'twitter:title', content: 'ETCH — Definition, engineered'},
   {
@@ -59,6 +62,7 @@ export const meta: Route.MetaFunction = () => [
     content:
       'Premium EMS for tone and strength. Twenty minutes of deep activation.',
   },
+  {name: 'twitter:image', content: '/og-image.jpg'},
 ];
 
 export function links() {

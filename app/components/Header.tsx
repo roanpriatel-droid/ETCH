@@ -22,8 +22,10 @@ type NavItem = {label: string; to: string; sub?: string};
 const NAV: NavItem[] = [
   {label: 'Flux Core', to: '/products/etch-flux-core', sub: 'Abs'},
   {label: 'Flux Form', to: '/products/etch-flux-form', sub: 'Glutes'},
-  {label: 'The Set', to: '/products/the-etch-set'},
-  {label: 'The Method', to: '/pages/the-method'},
+  {label: 'The Set', to: '/products/the-etch-set', sub: 'Both'},
+  {label: 'Method: Core', to: '/products/the-etch-method-core', sub: 'Protocol'},
+  {label: 'Method: Form', to: '/products/the-etch-method-form', sub: 'Protocol'},
+  {label: 'Pads', to: '/products/flux-pads', sub: 'Refills'},
   {label: 'Science', to: '/pages/science'},
 ];
 
