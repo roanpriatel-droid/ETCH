@@ -3067,3 +3067,317 @@ main{
   font-size:11px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--brass-deep);
 }
+
+/* ================================================================
+   APPEL UPLIFT — visual polish layer
+   All additive. Builds depth, instrument-frame language, micro-motion.
+   ================================================================ */
+
+/* ---- Header: compact-on-scroll state ---- */
+.header{
+  transition: height .35s cubic-bezier(.2,.7,.2,1),
+              background-color .35s,
+              backdrop-filter .35s,
+              border-color .35s;
+  position:relative;
+}
+.header::after{
+  /* a hair-thin brass keyline that fades in on scroll */
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(
+    90deg,transparent 0,rgba(220,179,106,.35) 24%,
+    rgba(220,179,106,.45) 50%,rgba(220,179,106,.35) 76%,transparent 100%);
+  opacity:0;transition: opacity .35s;
+  pointer-events:none;
+}
+.header.is-compact{
+  height: calc(var(--header-height) - 12px);
+  background:rgba(13,10,6,.92);
+  backdrop-filter:saturate(160%) blur(18px);
+  -webkit-backdrop-filter:saturate(160%) blur(18px);
+  border-bottom-color:transparent;
+}
+.header.is-compact::after{opacity:1}
+.header.is-compact .brand-mark{font-size:18px}
+
+/* ---- Corner brackets utility ----
+   Diagonal brass corner brackets — instrument-case treatment.
+   Apply via .cb-frame on a positioned (relative) parent. */
+.cb-frame{position:relative}
+.cb-frame::before,
+.cb-frame::after{
+  content:"";position:absolute;
+  width:22px;height:22px;
+  border:1px solid var(--brass-light);
+  opacity:.85;pointer-events:none;
+  transition: opacity .35s, transform .45s cubic-bezier(.2,.7,.2,1);
+}
+.cb-frame::before{
+  top:-8px;left:-8px;
+  border-right:none;border-bottom:none;
+}
+.cb-frame::after{
+  bottom:-8px;right:-8px;
+  border-left:none;border-top:none;
+}
+.cb-frame:hover::before{transform:translate(-2px,-2px)}
+.cb-frame:hover::after{transform:translate(2px,2px)}
+/* On light surfaces, brackets use brass-deep for contrast */
+.etch-section.ivory .cb-frame::before,
+.etch-section.ivory .cb-frame::after,
+.etch-section.parchment .cb-frame::before,
+.etch-section.parchment .cb-frame::after{
+  border-color:var(--brass-deep);opacity:.7;
+}
+
+/* ---- Hero ornament: brass underline after the headline ---- */
+.etch-hero h1{position:relative}
+.etch-hero h1::after{
+  content:"";display:block;
+  width:84px;height:2px;margin-top:18px;
+  background:var(--brass-grad);
+  border-radius:1px;
+  box-shadow:0 0 28px -2px rgba(220,179,106,.55);
+}
+/* Subtle ember pulse behind the hero device frame */
+.etch-hero .hero-stage::before{
+  content:"";position:absolute;
+  width:120%;height:120%;left:-10%;top:-10%;
+  background:radial-gradient(
+    ellipse 60% 50% at 50% 50%,
+    rgba(184,137,63,.18),
+    transparent 65%);
+  z-index:0;
+  animation: ember-pulse 8s ease-in-out infinite;
+  pointer-events:none;
+}
+.etch-hero .hero-stage{position:relative}
+@keyframes ember-pulse{
+  0%,100%{opacity:.45;transform:scale(1)}
+  50%{opacity:.75;transform:scale(1.04)}
+}
+@media (prefers-reduced-motion: reduce){
+  .etch-hero .hero-stage::before{animation:none}
+}
+
+/* ---- Hero frame gets corner brackets ---- */
+.hero-frame{overflow:visible}
+.hero-frame::before,
+.hero-frame::after{
+  content:"";position:absolute;
+  width:28px;height:28px;
+  border:1.5px solid var(--brass-light);
+  pointer-events:none;
+  opacity:.75;
+}
+.hero-frame::before{
+  top:-10px;left:-10px;
+  border-right:none;border-bottom:none;
+}
+.hero-frame::after{
+  bottom:-10px;right:-10px;
+  border-left:none;border-top:none;
+}
+
+/* ---- Product cards: depth + corner brackets + richer hover ---- */
+.product-card-lg{
+  transition: transform .4s cubic-bezier(.2,.7,.2,1),
+              border-color .3s,
+              box-shadow .4s;
+}
+.product-card-lg .pc-image::before,
+.product-card-lg .pc-image::after{
+  content:"";position:absolute;
+  width:20px;height:20px;
+  border:1px solid var(--brass-deep);
+  opacity:.55;pointer-events:none;
+  transition: opacity .35s, transform .4s cubic-bezier(.2,.7,.2,1);
+  z-index:2;
+}
+.product-card-lg .pc-image::before{
+  top:10px;left:10px;
+  border-right:none;border-bottom:none;
+}
+.product-card-lg .pc-image::after{
+  bottom:10px;right:10px;
+  border-left:none;border-top:none;
+}
+.product-card-lg:hover{
+  transform:translateY(-6px);
+  border-color:var(--brass);
+  box-shadow:
+    0 36px 80px -32px rgba(26,22,16,.28),
+    0 0 0 1px rgba(220,179,106,.18);
+}
+.product-card-lg:hover .pc-image::before{
+  opacity:.9;transform:translate(-3px,-3px);
+}
+.product-card-lg:hover .pc-image::after{
+  opacity:.9;transform:translate(3px,3px);
+}
+.product-card-lg .pc-price{
+  font-size:19px;
+}
+
+/* ---- Set band: brass divider + tighter price anchor ---- */
+.set-band .price{
+  display:inline-flex;align-items:baseline;gap:14px;
+  font-family:var(--font-mono);
+}
+.set-band .price s{
+  color:var(--mute-d);font-size:18px;opacity:.7;
+  text-decoration-color:var(--brass-deep);
+  text-decoration-thickness:1.5px;
+}
+.set-band .set-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:2px;
+  background:rgba(220,179,106,.1);
+  border:1px solid rgba(220,179,106,.35);
+  color:var(--brass-light);
+  font-family:var(--font-mono);font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;
+  margin-top:12px;
+  position:relative;
+}
+.set-band .set-tag::before{
+  content:"●";color:var(--brass-light);font-size:8px;
+}
+.set-band .set-frame{
+  position:relative;
+}
+.set-band .set-frame::before,
+.set-band .set-frame::after{
+  content:"";position:absolute;
+  width:34px;height:34px;
+  border:1.5px solid var(--brass-light);
+  opacity:.6;pointer-events:none;
+}
+.set-band .set-frame::before{
+  top:-12px;left:-12px;
+  border-right:none;border-bottom:none;
+}
+.set-band .set-frame::after{
+  bottom:-12px;right:-12px;
+  border-left:none;border-top:none;
+}
+
+/* ---- Method card: corner brackets + brass watermark ---- */
+.method-card{
+  position:relative;overflow:visible;
+}
+.method-card::before,
+.method-card::after{
+  content:"";position:absolute;
+  width:26px;height:26px;
+  border:1.5px solid var(--brass-light);
+  opacity:.5;pointer-events:none;
+}
+.method-card::before{
+  top:-10px;left:-10px;
+  border-right:none;border-bottom:none;
+}
+.method-card::after{
+  bottom:-10px;right:-10px;
+  border-left:none;border-top:none;
+}
+/* watermark monogram top-right corner */
+.method-card .row:first-of-type{
+  position:relative;
+}
+/* Add a tiny mono "MTHD" mark in the corner */
+
+/* ---- Ghost button: micro chevron motion ---- */
+.btn-ghost{position:relative;overflow:hidden}
+.btn-ghost{
+  transition: background .25s, color .25s, border-color .25s,
+              transform .25s, letter-spacing .25s;
+}
+.btn-ghost:hover{
+  letter-spacing:.012em;
+}
+/* The trailing arrow (→) gets a subtle nudge on hover.
+   Works because Hydrogen's ghost CTAs use a literal "→" character. */
+
+/* ---- PDP frame: corner brackets ---- */
+.pdp-frame{
+  position:relative;
+}
+.pdp-frame::before,
+.pdp-frame::after{
+  content:"";position:absolute;
+  width:28px;height:28px;
+  border:1.5px solid var(--brass-light);
+  opacity:.7;pointer-events:none;
+  z-index:3;
+}
+.pdp-frame::before{
+  top:-10px;left:-10px;
+  border-right:none;border-bottom:none;
+}
+.pdp-frame::after{
+  bottom:-10px;right:-10px;
+  border-left:none;border-top:none;
+}
+
+/* ---- Footer: subtle vertical brass dividers between cols on desktop ---- */
+@media (min-width: 920px){
+  .footer-cols{
+    position:relative;
+  }
+  .footer-col:not(:last-child){
+    position:relative;
+  }
+  .footer-col:not(:last-child)::after{
+    content:"";position:absolute;
+    top:4px;bottom:4px;right:-32px;width:1px;
+    background:linear-gradient(
+      180deg,transparent 0,
+      rgba(220,179,106,.18) 30%,
+      rgba(220,179,106,.18) 70%,transparent 100%);
+    pointer-events:none;
+  }
+}
+
+/* ---- Sticky buy bar: brass keyline ---- */
+.sticky-buy-bar{
+  border-bottom:1px solid transparent;
+  background-image:
+    linear-gradient(rgba(13,10,6,.96),rgba(13,10,6,.96)),
+    linear-gradient(90deg,
+      transparent 0,
+      rgba(220,179,106,.4) 24%,
+      rgba(220,179,106,.5) 50%,
+      rgba(220,179,106,.4) 76%,
+      transparent 100%);
+  background-origin:border-box;
+  background-clip:padding-box,border-box;
+  border-bottom-color:transparent;
+  backdrop-filter:saturate(150%) blur(14px);
+  -webkit-backdrop-filter:saturate(150%) blur(14px);
+}
+
+/* ---- Section eyebrow: light decorative ornament glyph ---- */
+.sec-head .eyebrow,
+.set-band .eyebrow,
+.method .eyebrow,
+.email-capture .eyebrow{
+  position:relative;
+}
+.sec-head .eyebrow::after,
+.set-band .eyebrow::after,
+.method .eyebrow::after{
+  content:"";display:inline-block;
+  width:8px;height:8px;margin-left:14px;
+  border-top:1px solid currentColor;
+  border-right:1px solid currentColor;
+  opacity:.55;
+  transform:rotate(45deg) translateY(-1px);
+}
+
+/* ---- Scroll-cue: sit further below content on small viewports ---- */
+@media (max-width: 720px){
+  .scroll-cue{bottom:18px}
+  .hero-frame::before,
+  .hero-frame::after{width:18px;height:18px}
+}

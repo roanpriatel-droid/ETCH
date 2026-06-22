@@ -36,10 +36,11 @@ const ANNOUNCEMENTS = [
 ];
 
 export function Header({isLoggedIn, cart}: HeaderProps) {
+  const compact = useScrolledPast(40);
   return (
     <>
       <AnnouncementBar />
-      <header className="header">
+      <header className={`header${compact ? ' is-compact' : ''}`}>
         <NavLink prefetch="intent" to="/" end>
           <span className="brand-mark">
             ETCH<span className="dot">.</span>
@@ -50,6 +51,19 @@ export function Header({isLoggedIn, cart}: HeaderProps) {
       </header>
     </>
   );
+}
+
+/** True once the window has scrolled past `threshold` px. SSR-safe (false on first paint). */
+function useScrolledPast(threshold: number) {
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onScroll = () => setPast(window.scrollY > threshold);
+    onScroll();
+    window.addEventListener('scroll', onScroll, {passive: true});
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [threshold]);
+  return past;
 }
 
 function AnnouncementBar() {
