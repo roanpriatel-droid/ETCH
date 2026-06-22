@@ -38,6 +38,10 @@ function BuyShell({content, children}: {content: PdpContent; children: React.Rea
         ))}
       </ul>
 
+      {isDigital && content.matchedDevice ? (
+        <DigitalIncludedBadge device={content.matchedDevice} />
+      ) : null}
+
       {children}
 
       {/* Order bump is the device → Method upsell. Skip on digital (it IS the
@@ -173,5 +177,47 @@ export function PdpPlaceholderBuyBox({content}: {content: PdpContent}) {
         </p>
       ) : null}
     </BuyShell>
+  );
+}
+
+/**
+ * Digital-product callout: reframes the standalone price as the back-pocket
+ * option ("you can buy it alone — but it comes free with the device").
+ *
+ * Sits between the mini benefits and the price row, so visitors see the
+ * device upsell *before* the $39 number anchors. Drives device cross-sell
+ * without obscuring the standalone path.
+ */
+function DigitalIncludedBadge({
+  device,
+}: {
+  device: {handle: string; name: string};
+}) {
+  return (
+    <aside className="pdp-included" data-reveal>
+      <div className="pdp-included-row">
+        <span className="pdp-included-tick" aria-hidden="true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+          >
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </span>
+        <p className="pdp-included-text">
+          <strong>Included free</strong> with every{' '}
+          <span className="serif">{device.name.replace(/^The /, '')}</span>.
+          Standalone is for readers without the device — or anyone who wants
+          the protocol first.
+        </p>
+      </div>
+      <Link className="pdp-included-cta" to={`/products/${device.handle}`}>
+        Get the device + Method instead →
+      </Link>
+    </aside>
   );
 }

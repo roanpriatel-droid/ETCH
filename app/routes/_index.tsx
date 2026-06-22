@@ -1,5 +1,5 @@
 import {useEffect, useRef} from 'react';
-import {Form, useActionData, useLoaderData, useNavigation, Link} from 'react-router';
+import {useFetcher, useLoaderData, Link} from 'react-router';
 import {Money} from '@shopify/hydrogen';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import type {Route} from './+types/_index';
@@ -73,52 +73,6 @@ export async function loader({context}: Route.LoaderArgs) {
   return {isShopLinked, shopifyDevices};
 }
 
-/**
- * Cohort email-capture action.
- *
- * Creates a Shopify customer with a random password and the email the visitor
- * submitted. Subscribing them to marketing has to be enabled separately in the
- * Shopify admin notification settings (post-2025 SF API removed acceptsMarketing
- * on customerCreate — emails are flagged for confirmation instead).
- *
- * For higher volume / better deliverability, swap this for a Klaviyo /
- * Mailchimp / Customer.io POST. The contract is the same: read `email`, return
- * `{ok: boolean, message: string}`.
- */
-export async function action({request, context}: Route.ActionArgs) {
-  const formData = await request.formData();
-  const email = String(formData.get('email') ?? '').trim();
-
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return {ok: false, message: 'Please enter a valid email.'};
-  }
-  if (!context.env.PUBLIC_STORE_DOMAIN) {
-    return {
-      ok: false,
-      message:
-        'The store isn’t linked yet — cohort signup will activate once it is.',
-    };
-  }
-  try {
-    const password = `etch_${crypto.randomUUID()}`;
-    const {customerCreate} = await context.storefront.mutate(
-      CUSTOMER_CREATE_MUTATION,
-      {variables: {input: {email, password}}},
-    );
-    const err = customerCreate?.customerUserErrors?.[0];
-    if (err) {
-      // CUSTOMER_DISABLED = already exists (good enough — treat as success).
-      if (err.code === 'CUSTOMER_DISABLED' || err.code === 'TAKEN') {
-        return {ok: true, message: 'You’re on the list.'};
-      }
-      return {ok: false, message: err.message || 'Something stalled. Try again.'};
-    }
-    return {ok: true, message: 'You’re on the list — watch for No. 001.'};
-  } catch {
-    return {ok: false, message: 'Something stalled. Try again.'};
-  }
-}
-
 export default function Homepage() {
   const data = useLoaderData<typeof loader>();
   return (
@@ -165,24 +119,25 @@ function Hero() {
               See the science →
             </Link>
           </div>
-          <div className="trust">
-            {LAUNCH.heroReviewBadge ? (
+          <p className="hero-commit" role="note">
+            <span>From <strong>CA$199</strong></span>
+            <span aria-hidden="true">·</span>
+            <span>Free, carbon-neutral shipping</span>
+            <span aria-hidden="true">·</span>
+            <span>60-night money-back</span>
+            <span aria-hidden="true">·</span>
+            <span>2-year warranty</span>
+          </p>
+          {LAUNCH.heroReviewBadge ? (
+            <div className="trust">
               <div className="item">
                 <div className="k">Rated</div>
                 <div className="v">
                   <span className="stars">★★★★★</span> 4.9 · 2,300+ reviews
                 </div>
               </div>
-            ) : null}
-            <div className="item">
-              <div className="k">Guarantee</div>
-              <div className="v">60 nights, refunded</div>
             </div>
-            <div className="item">
-              <div className="k">Shipping</div>
-              <div className="v">Free, carbon-neutral</div>
-            </div>
-          </div>
+          ) : null}
         </div>
         <div
           className="hero-stage"
@@ -683,13 +638,12 @@ function Faq() {
    EMAIL CAPTURE — founding cohort signup (presentational)
    ================================================================ */
 function EmailCapture() {
-  const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
-  const submitting = navigation.state === 'submitting';
+  const fetcher = useFetcher<{ok: boolean; message: string}>();
+  const submitting = fetcher.state === 'submitting';
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (actionData?.ok) formRef.current?.reset();
-  }, [actionData]);
+    if (fetcher.data?.ok) formRef.current?.reset();
+  }, [fetcher.data]);
 
   return (
     <section className="email-capture">
@@ -705,9 +659,9 @@ function EmailCapture() {
             ships.
           </p>
         </div>
-        <Form
+        <fetcher.Form
           method="post"
-          replace
+          action="/api/cohort"
           ref={formRef}
           className="email-form"
           data-reveal
@@ -730,17 +684,17 @@ function EmailCapture() {
               {submitting ? 'Reserving…' : 'Join the cohort'}
             </button>
           </div>
-          {actionData ? (
+          {fetcher.data ? (
             <p
               className="fine"
               role="status"
               style={{
-                color: actionData.ok
+                color: fetcher.data.ok
                   ? 'var(--brass-light)'
                   : 'var(--oxblood-light)',
               }}
             >
-              {actionData.message}
+              {fetcher.data.message}
             </p>
           ) : (
             <p className="fine">
@@ -748,7 +702,7 @@ function EmailCapture() {
               <a href="/policies/privacy-policy">privacy policy</a>.
             </p>
           )}
-        </Form>
+        </fetcher.Form>
       </div>
     </section>
   );
@@ -937,17 +891,3 @@ const SHOWCASE_QUERY = `#graphql
   }
 ` as const;
 
-const CUSTOMER_CREATE_MUTATION = `#graphql
-  mutation HomepageCohortCustomerCreate($input: CustomerCreateInput!) {
-    customerCreate(input: $input) {
-      customer {
-        id
-      }
-      customerUserErrors {
-        code
-        field
-        message
-      }
-    }
-  }
-` as const;

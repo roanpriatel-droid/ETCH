@@ -401,12 +401,11 @@ export type HomepageShowcaseQuery = {
   };
 };
 
-export type HomepageCohortCustomerCreateMutationVariables =
-  StorefrontAPI.Exact<{
-    input: StorefrontAPI.CustomerCreateInput;
-  }>;
+export type CohortCustomerCreateMutationVariables = StorefrontAPI.Exact<{
+  input: StorefrontAPI.CustomerCreateInput;
+}>;
 
-export type HomepageCohortCustomerCreateMutation = {
+export type CohortCustomerCreateMutation = {
   customerCreate?: StorefrontAPI.Maybe<{
     customer?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Customer, 'id'>>;
     customerUserErrors: Array<
@@ -1302,9 +1301,9 @@ interface GeneratedQueryTypes {
 }
 
 interface GeneratedMutationTypes {
-  '#graphql\n  mutation HomepageCohortCustomerCreate($input: CustomerCreateInput!) {\n    customerCreate(input: $input) {\n      customer {\n        id\n      }\n      customerUserErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n': {
-    return: HomepageCohortCustomerCreateMutation;
-    variables: HomepageCohortCustomerCreateMutationVariables;
+  '#graphql\n  mutation CohortCustomerCreate($input: CustomerCreateInput!) {\n    customerCreate(input: $input) {\n      customer { id }\n      customerUserErrors { code field message }\n    }\n  }\n': {
+    return: CohortCustomerCreateMutation;
+    variables: CohortCustomerCreateMutationVariables;
   };
 }
 
